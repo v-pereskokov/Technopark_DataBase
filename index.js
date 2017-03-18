@@ -1,17 +1,21 @@
-const KoaServer = require('koa-server');
-const server = new KoaServer();
+const Koa = require('koa');
+const Router = require('koa-router');
+const bodyParser = require('koa-bodyparser');
 
-const test = require('./test');
-const top = new test.top();
+const app = new Koa();
+const router = new Router();
 
-server.get('/get',function*(){
-  const name = this.cookie.get('name');
-  this.body = name;
+const port = process.env.PORT || 3000;
+
+const select = require('./Services/UserService/UserService');
+
+router.post('/', select.a);
+
+app
+  .use(bodyParser())
+  .use(router.routes())
+  .use(router.allowedMethods());
+
+app.listen(port, () => {
+  console.log('Server is running on port:', port);
 });
-// Set
-server.post('/set',function*(){
-  this.cookie.set('name', top.getName());
-  this.body = 'ok'
-});
-
-server.listen(3000);
