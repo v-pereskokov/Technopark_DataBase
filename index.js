@@ -3,18 +3,14 @@ const Router = require('koa-router');
 const bodyParser = require('koa-bodyparser');
 
 const app = new Koa();
-const router = new Router();
 
 const port = process.env.PORT || 3000;
 
-const select = require('./Services/UserService/UserService');
-
-router.post('/', select.a);
+const userRouter = require('./routes/UserRoutes/UserRoutes');
 
 app
   .use(bodyParser())
-  .use(router.routes())
-  .use(router.allowedMethods());
+  .use(userRouter.userRouter.routes());
 
 app.listen(port, () => {
   console.log('Server is running on port:', port);

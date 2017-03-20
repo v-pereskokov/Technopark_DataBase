@@ -5,18 +5,50 @@ class User {
 
   getUser() {
     return {
-      fullname: this._fullname,
-      nickname: this._nickname,
-      email: this._email,
-      about: this._about
+      fullname: this.fullname,
+      nickname: this.nickname,
+      email: this.email,
+      about: this.about
     };
   }
 
   setUser(user) {
-    this._fullname = user.fullname;
-    this._nickname = user.nickname;
-    this._email = user.email;
-    this._about = user.about;
+    this.fullname = user.fullname;
+    this.nickname = user.nickname;
+    this.email = user.email;
+    this.about = user.about;
+  }
+
+  get fullname() {
+    return this.fullname;
+  }
+
+  set fullname(value) {
+    this.fullname = value;
+  }
+
+  get nickname() {
+    return this.nickname;
+  }
+
+  set nickname(value) {
+    this.nickname = value;
+  }
+
+  get email() {
+    return this.email;
+  }
+
+  set email(value) {
+    this.email = value;
+  }
+
+  get about() {
+    return this.about;
+  }
+
+  set about(value) {
+    this.about = value;
   }
 }
 
