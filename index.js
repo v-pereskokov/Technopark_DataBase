@@ -7,10 +7,12 @@ const app = new Koa();
 const port = process.env.PORT || 3000;
 
 const userRouter = require('./routes/UserRoutes/UserRoutes');
+const forumRouter = require('./routes/ForumRoutes/ForumRoutes');
 
 app
   .use(bodyParser())
-  .use(userRouter.userRouter.routes());
+  .use(userRouter.userRouter.routes())
+  .use(forumRouter.forumRouter.routes());
 
 app.listen(port, () => {
   console.log('Server is running on port:', port);

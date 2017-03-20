@@ -6,11 +6,10 @@ class ForumService {
   }
 
   createForum(forum) {
-    this._query = `INSERT INTO forums (slug, title, \"user\") ` +
-      `VALUES(${forum.slug}, ${forum.title}, ` +
-      `(SELECT nickname FROM users WHERE LOWER(nickname) = LOWER(${forum.username})))`;
+    this._query = `INSERT INTO forums (slug, title, username) ` +
+      `VALUES(\'${forum.slug}\', \'${forum.title}\', \'${forum.username}\');`;
 
-    return dataBase.dataBase.query(this._query);
+    return dataBase.dataBase.oneOrNone(this._query);
   }
 
   createThread(thread) {
@@ -20,7 +19,7 @@ class ForumService {
 
     this._query = `INSERT INTO threads (author, created, forum, \"message\", slug, title) ` +
       `VALUES(${thread.author}, ${thread.created}, ` +
-      `(SELECT slug FROM forums WHERE LOWER(slug) = LOWER(${thread.forum})), ` +
+      `(SELECT slug FROM forum WHERE LOWER(slug) = LOWER(${thread.forum})), ` +
       `${thread.message}, ${thread.slug}, ${thread.title});`;
 
     return dataBase.dataBase.query(this._query)
@@ -35,10 +34,16 @@ class ForumService {
       });
   }
 
-  getForum(slug) {
+  getForumBySlug(slug) {
     this._query = `SELECT * FROM forums WHERE LOWER(slug) = LOWER(\'${slug}\');`;
 
     return dataBase.dataBase.oneOrNone(this._query);
+  }
+
+  getForumByUsername(username) {
+    this._query = `SELECT * FROM forums WHERE LOWER(username) = LOWER(\'${username}\');`;
+
+    return dataBase.dataBase.one(this._query);
   }
 
   getThread(slug) {

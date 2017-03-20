@@ -6,7 +6,7 @@ class UserService {
   }
 
   createTable() {
-    this._query = "CREATE TABLE IF NOT EXISTS \"user\" (" +
+    this._query = "CREATE TABLE IF NOT EXISTS users (" +
       "id SERIAL NOT NULL PRIMARY KEY," +
       "about TEXT," +
       "nickname VARCHAR(15) NOT NULL UNIQUE," +
@@ -17,40 +17,24 @@ class UserService {
   }
 
   create(user) {
-    this._query = 'INSERT INTO \"user\" (about, nickname, fullname, email) ' +
+    this._query = 'INSERT INTO users (about, nickname, fullname, email) ' +
       'VALUES (${about}, ${nickname}, ${fullname}, ${email})';
 
     return dataBase.dataBase.query(this._query, user);
   }
 
   update(user) {
-    this._query = 'UPDATE user SET ';
+    this._query = 'UPDATE users SET';
 
-    if (user.about) {
-      this._query += `about = \'${user.about}\', `;
-    }
+    //to do
 
-    if (user.nickname) {
-      this._query += `nickname = \'${user.nickname}\', `;
-    }
+    this._query = `UPDATE users SET (about, fullname, email) = (\'${user.about}\', \'${user.fullname}\', \'${user.email}\') WHERE LOWER(nickname) = LOWER(\'${user.nickname}\');`;
 
-    if (user.fullname) {
-      this._query += `fullname = \'${user.fullname}\', `;
-    }
-
-    if (user.email) {
-      this._query += `email = \'${user.email}\',`;
-    }
-
-    console.log(this._query.slice(0, this._query.length - 1));
-
-    this._query += ';';
-
-    return dataBase.dataBase.query(this._query.slice(0, this._query.length - 1));
+    return dataBase.dataBase.query(this._query);
   }
 
   getUserByNickname(field) {
-    this._query = 'SELECT * FROM \"user\" WHERE LOWER(nickname) = LOWER(${nickname});';
+    this._query = 'SELECT * FROM users WHERE LOWER(nickname) = LOWER(${nickname});';
 
     return dataBase.dataBase.oneOrNone(this._query, {
       nickname: field
@@ -58,17 +42,30 @@ class UserService {
   }
 
   getUserByEmail(field) {
-    this._query = 'SELECT * FROM \"user\" WHERE LOWER(email) = LOWER(${email});';
+    this._query = 'SELECT * FROM users WHERE LOWER(email) = LOWER(${email});';
 
     return dataBase.dataBase.oneOrNone(this._query, {
       email: field
     });
   }
 
+  getUser(nickname, email) {
+    this._query = 'SELECT * FROM users WHERE LOWER(nickname) = LOWER(${nickname}) OR LOWER(email) = LOWER(${email});';
+
+    return dataBase.dataBase.manyOrNone(this._query, {
+      nickname: nickname,
+      email: email
+    });
+  }
+
   getAllUsers() {
-    this._query = 'SELECT * FROM \"user\";';
+    this._query = 'SELECT * FROM users;';
 
     return dataBase.dataBase.manyOrNone(this._query);
+  }
+
+  _isEmpty(field) {
+    return field.trim().length === 0;
   }
 }
 
