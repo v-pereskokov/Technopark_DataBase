@@ -57,14 +57,14 @@ class UserController {
       let body = ctx.request.body;
       body['nickname'] = ctx.params.nickname;
 
-      let nickname = body.nickname;
-      let fullname = body.fullname;
-      let about = body.about;
-      let email = body.email;
+      const nickname = body.nickname;
+      const fullname = body.fullname;
+      const about = body.about;
+      const email = body.email;
 
-      userService.userService.getUserByNickname(body.nickname)
+      userService.userService.getUserByNickname(nickname)
         .catch(error => {
-          ctx.body = '';
+          ctx.body = 'Not found!';
           ctx.status = 404;
           resolve();
         })
@@ -84,11 +84,8 @@ class UserController {
               }
             }
 
-            return userService.userService.update({
-              names: names.join(', '),
-              values: values.join(', '),
-              nickname: data.nickname
-            });
+            return userService.userService.update(names.join(', '),
+              values.join(', '), nickname);
           } else {
             return userService.userService.getUserByEmail(email);
           }
@@ -107,106 +104,29 @@ class UserController {
               }
             }
 
-            return userService.userService.update({
-              names: names.join(', '),
-              values: values.join(', '),
-              nickname: nickname
-            });
+            return userService.userService.update(names.join(', '),
+              values.join(', '), nickname);
           }
         })
-        .then(function (data) {
+        .then(data => {
           if (isEmpty(email)) {
             ctx.body = JSON.parse(JSON.stringify(data));
             ctx.status = 200;
             resolve();
           } else {
-            return dataBase.dataBase.one('select * from users where upper(nickname) = $1', nickname.toUpperCase());
+            return userService.userService.getUserByNickname(nickname);
           }
         })
-        .then(function (data) {
+        .then(data => {
           ctx.body = JSON.parse(JSON.stringify(data));
           ctx.status = 200;
           resolve();
         })
-        .catch(function (error) {
+        .catch(error => {
           ctx.body = '';
           ctx.status = 409;
           resolve();
         });
-      // .then(data => {
-      //   if (data) {
-      //     if (!isEmptyEmail) {
-      //       userService.userService.getUserByEmail(body.email)
-      //         .then(data => {
-      //           if (data) {
-      //             ctx.body = data;
-      //             ctx.status = 409;
-      //             resolve();
-      //           } else {
-      //             userService.userService.update(body)
-      //               .then(data => {
-      //                 userService.userService.getUserByNickname(body.nickname)
-      //                   .then(data => {
-      //                     ctx.body = data;
-      //                     ctx.status = 200;
-      //                     resolve();
-      //                   });
-      //               })
-      //               .catch(error => {
-      //                 ctx.body = error;
-      //                 ctx.status = 500;
-      //                 resolve();
-      //               });
-      //           }
-      //         })
-      //         .catch(error => {
-      //           userService.userService.update(body)
-      //             .then(data => {
-      //               userService.userService.getUserByNickname(body.nickname)
-      //                 .then(data => {
-      //                   ctx.body = data;
-      //                   ctx.status = 200;
-      //                   resolve();
-      //                 });
-      //             })
-      //             .catch(error => {
-      //               ctx.body = error;
-      //               ctx.status = 500;
-      //               resolve();
-      //             });
-      //         });
-      //     } else if (isEmptyUpdate) {
-      //       ctx.body = data;
-      //       ctx.status = 200;
-      //       resolve();
-      //     } else {
-      //       userService.userService.update(body)
-      //         .then(data => {
-      //           userService.userService.getUserByNickname(body.nickname)
-      //             .then(data => {
-      //               ctx.body = data;
-      //               ctx.status = 200;
-      //               resolve();
-      //             });
-      //         })
-      //         .catch(error => {
-      //           ctx.body = error;
-      //           ctx.status = 500;
-      //           resolve();
-      //         });
-      //     }
-      //   } else {
-      //     console.log('here');
-      //     ctx.body = 'Not found!';
-      //     ctx.status = 404;
-      //     resolve();
-      //   }
-      // })
-      // .catch(error => {
-      //   ctx.body = error;
-      //   ctx.status = 404;
-      //   resolve();
-      // });
     });
   }
 }

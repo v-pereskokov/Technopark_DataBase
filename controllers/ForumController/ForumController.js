@@ -58,11 +58,11 @@ class ForumController {
       const slug = ctx.params.slug;
 
       forumService.forumService.getForumBySlugNotAll([
-        'forums.title',
-        'forums.username',
-        'forums.slug',
-        'forums.posts',
-        'forums.threads',
+        'title',
+        'username',
+        'slug',
+        'posts',
+        'threads',
       ], slug)
         .then(data => {
           const parsingData = JSON.parse(JSON.stringify(data));
