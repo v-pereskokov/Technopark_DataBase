@@ -12,9 +12,9 @@ class UserService {
     return dataBase.dataBase.none(this._query);
   }
 
-  update(names, values, nickname) {
-    this._query = `UPDATE users SET (${names}) = (${values}) 
-    WHERE LOWER(nickname) = LOWER(\'${nickname}\');`;
+  update(user) {
+    this._query = `UPDATE users SET (${user.names}) = (${user.values}) 
+    WHERE LOWER(nickname) = LOWER(\'${user.nickname}\');`;
 
     return dataBase.dataBase.none(this._query);
   }

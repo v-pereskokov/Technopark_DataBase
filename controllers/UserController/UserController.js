@@ -84,8 +84,11 @@ class UserController {
               }
             }
 
-            return userService.userService.update(names.join(', '),
-              values.join(', '), nickname);
+            return userService.userService.update({
+              names: names.join(', '),
+              values: values.join(', '),
+              nickname: nickname
+            });
           } else {
             return userService.userService.getUserByEmail(email);
           }
@@ -104,8 +107,11 @@ class UserController {
               }
             }
 
-            return userService.userService.update(names.join(', '),
-              values.join(', '), nickname);
+            return userService.userService.update({
+              names: names.join(', '),
+              values: values.join(', '),
+              nickname: nickname
+            });
           }
         })
         .then(data => {
