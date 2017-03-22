@@ -194,7 +194,7 @@ class ForumController {
     });
   }
 
-  getThreads(ctx, netx) {
+  getThreads(ctx, next) {
     return new Promise(resolve => {
       const desc = ctx.query.desc;
       const limit = ctx.query.limit;
@@ -226,6 +226,55 @@ class ForumController {
             return dataBase.dataBase.any(query, data.id)
           } else {
             return dataBase.dataBase.any(query, [data.id, since])
+          }
+        })
+        .then(data => {
+          ctx.body = data;
+          ctx.status = 200;
+          resolve();
+        })
+        .catch(error => {
+          ctx.body = 'Not found!';
+          ctx.status = 404;
+          resolve();
+        });
+    });
+  }
+
+  getUsers(ctx, next) {
+    return new Promise(resolve => {
+      const desc = ctx.query.desc;
+      const limit = ctx.query.limit;
+      const since = ctx.query.since;
+      const slug = ctx.params.slug;
+
+      dataBase.dataBase.one('select * from forums where upper(slug) = $1', slug.toUpperCase())
+        .then(data => {
+          let query = 'select * from users where (users.nickname in (' +
+            ' select distinct threads.author from threads where threads.forum = $1 ) or users.nickname in (' +
+            ' select distinct posts.author from posts where posts.forum = $2 )) ';
+          if(!isEmpty(since)) {
+            if(desc === "true") {
+              query = query + ' and lower(users.nickname) collate "ucs_basic" < ' +
+                'lower($3) collate "ucs_basic"';
+            } else {
+              query = query + ' and lower(users.nickname) collate "ucs_basic" > ' +
+                'lower($3) collate "ucs_basic"';
+            }
+          }
+          query = query +  ' order by lower(users.nickname) collate "ucs_basic"';
+          if(desc === "true") {
+            query = query + " desc";
+          } else {
+            query = query + " asc";
+          }
+          if(!isEmpty(limit)) {
+            query = query + " limit " + limit;
+          }
+          if(!isEmpty(since)) {
+            return dataBase.dataBase.any(query, [data.id, data.slug, since]);
+          } else {
+            return dataBase.dataBase.any(query, [data.id, data.slug]);
           }
         })
         .then(data => {
