@@ -8,10 +8,12 @@ const port = process.env.PORT || 3000;
 
 const userRouter = require('./routes/UserRoutes/UserRoutes');
 const forumRouter = require('./routes/ForumRoutes/ForumRoutes');
+const threadRouter = require('./routes/ThreadRoutes/ThreadRoutes');
 
 app
   .use(bodyParser())
   .use(userRouter.userRouter.routes())
+  .use(threadRouter.threadRouter.routes())
   .use(forumRouter.forumRouter.routes());
 
 app.listen(port, () => {

@@ -14,9 +14,7 @@ class ForumService {
   }
 
   updateFields(fields, values, where) {
-    this._query = `UPDATE forums SET
-    (${fields}) = (${values})
-     WHERE LOWER(${where.name}) = LOWER(${where.value});`
+    this._query = `UPDATE forums SET (${fields}) = (${values}) WHERE LOWER(${where.name}) = LOWER(\'${where.value}\');`;
 
     return dataBase.dataBase.none(this._query);
   }
@@ -44,8 +42,9 @@ class ForumService {
   }
 
   getFieldBy(field, by) {
-    this._query = `SELECT F.${field} FROM forums F
-    WHERE LOWER(${by.name}) = LOWER(\'${by.value}\')`
+    this._query = `SELECT ${field} FROM forums WHERE LOWER(${by.name}) = LOWER(\'${by.value}\')`;
+
+    return dataBase.dataBase.one(this._query);
   }
 }
 

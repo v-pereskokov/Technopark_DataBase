@@ -1,6 +1,7 @@
 const userService = require('../../services/UserService/UserService');
 const forumService = require('../../services/ForumService/ForumService');
 const threadService = require('../../services/ThreadService/ThreadService');
+const dataBase = require('../../database/DataBase');
 
 class ForumController {
   constructor() {
@@ -107,7 +108,7 @@ class ForumController {
             });
         })
         .then(() => {
-          return forumService.forumService.getForumBySlug(forum)
+          return forumService.forumService.getForumBySlug(forum);
         })
         .then(data => {
           forum = data.slug;
@@ -117,7 +118,7 @@ class ForumController {
             forum: data.id,
             message: message,
             title: title,
-            created: isEmpty(created) ? created : null,
+            created: !isEmpty(created) ? created : null,
             slug: slug
           });
         })
@@ -128,7 +129,7 @@ class ForumController {
           })
         })
         .then(data => {
-          return forumService.forumService.updateFields('threads', `\'${++(data.threads)}\'`, {
+          return forumService.forumService.updateFields('threads', `${++(data.threads)}`, {
             name: 'slug',
             value: forum
           });
@@ -136,7 +137,7 @@ class ForumController {
         .then(() => {
           return threadService.threadService.getThreadBySlug(slug, true);
         })
-        .then(function (data) {
+        .then(data => {
           if(isEmpty(created)) {
             if(isEmpty(ctx.request.body.slug)) {
               ctx.body = {
@@ -185,11 +186,58 @@ class ForumController {
             resolve();
           }
         })
-        .catch(function (err) {
-          ctx.body = 'Not found!';
+        .catch(error => {
+          ctx.body = error;
           ctx.status = 404;
           resolve();
         })
+    });
+  }
+
+  getThreads(ctx, netx) {
+    return new Promise(resolve => {
+      const desc = ctx.query.desc;
+      const limit = ctx.query.limit;
+      const since = ctx.query.since;
+      const slug = ctx.params.slug;
+
+      forumService.forumService.getForumBySlug(slug)
+        .then(data => {
+          let str = 'select threads.slug, threads.id, threads.title, threads.message, threads.author, threads.created, forums.slug as forum' +
+            ' from threads INNER JOIN forums ON (forums.id = threads.forum) where threads.forum = $1';
+          let query = str;
+          if(!isEmpty(since)) {
+            if(desc === "true") {
+              query = query + " and threads.created <= $2";
+            } else {
+              query = query + " and threads.created >= $2";
+            }
+          }
+          query = query +  ' order by threads.created';
+          if(!isEmpty(desc)) {
+            if(desc === "true") {
+              query = query + " desc";
+            }
+          }
+          if(!isEmpty(limit)) {
+            query = query + " limit " + limit;
+          }
+          if(isEmpty(since)) {
+            return dataBase.dataBase.any(query, data.id)
+          } else {
+            return dataBase.dataBase.any(query, [data.id, since])
+          }
+        })
+        .then(data => {
+          ctx.body = data;
+          ctx.status = 200;
+          resolve();
+        })
+        .catch(error => {
+          ctx.body = 'Not found!';
+          ctx.status = 404;
+          resolve();
+        });
     });
   }
 }
@@ -199,6 +247,15 @@ function isEmpty(obj) {
     return false;
   }
   return true;
+}
+
+function isNumeric(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+function compareNumeric(a, b) {
+  if (a > b) return 1;
+  if (a < b) return -1;
 }
 
 const forumController = new ForumController();

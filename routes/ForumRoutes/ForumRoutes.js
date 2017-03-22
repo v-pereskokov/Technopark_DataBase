@@ -6,5 +6,6 @@ const forumRouter = new Router();
 forumRouter.post('/api/forum/create', forumController.forumController.create);
 forumRouter.get('/api/forum/:slug/details', forumController.forumController.get);
 forumRouter.post('/api/forum/:slug/create', forumController.forumController.createThread);
+forumRouter.get('/api/forum/:slug/threads', forumController.forumController.getThreads);
 
 module.exports.forumRouter = forumRouter;
