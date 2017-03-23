@@ -1,10 +1,9 @@
 const Koa = require('koa');
-const Router = require('koa-router');
 const bodyParser = require('koa-bodyparser');
 
 const app = new Koa();
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 const userRouter = require('./routes/UserRoutes/UserRoutes');
 const forumRouter = require('./routes/ForumRoutes/ForumRoutes');
