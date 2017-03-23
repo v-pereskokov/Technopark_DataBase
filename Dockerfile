@@ -53,6 +53,9 @@ USER root
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
 
+RUN sudo apt-get install libtool pkg-config build-essential autoconf automake
+RUN sudo apt-get install libzmq-dev
+
 
 ADD . /db_technopark
 WORKDIR /db_technopark
