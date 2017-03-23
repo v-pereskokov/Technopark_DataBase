@@ -11,90 +11,34 @@ class PostService {
   getPost(id) {
     this._query = `SELECT * FROM posts WHERE id = ${id}`;
 
-    return dataBase.dataBase.oneOrNone(this._query);
+    return dataBase.dataBase.one(this._query);
   }
 
-  getDetailedPost(post, related) {
-    if (related) {
-      let user = null;
-      let forum = null;
-      let thread = null;
+  updatePost(message, id) {
+    this._query = `UPDATE posts SET (message, isEdited) = (\'${message}\', true) 
+    WHERE id = ${id};`;
 
-      for (let relation of related) {
-        switch (relation) {
-          case 'user':
-            return userService.userService.getUserByNickname({
-              nickname: post.author
-            })
-              .then(data => {
-                if (data.length) {
-                  user = data[0];
-                  return user;
-                }
-              });
-
-          case 'forum':
-            return forumService.forumService.getForum(post.forum)
-              .then(data => {
-                if (data.length) {
-                  forum = data[0];
-                }
-
-                dataBase.dataBase.oneOrNone(`SELECT COUNT(*) FROM threads WHERE LOWER(forum) = LOWER(${forum.slug})`)
-                  .then((data) => {
-                    forum = data;
-                    return forum;
-                  });
-              });
-
-          case 'thread':
-            return threadService.threadService.getThreadById(post.thread)
-              .then(data => {
-                if (data.length) {
-                  thread = data[0];
-                  return thread;
-                }
-              });
-
-          default:
-            break;
-        }
-      }
-    }
+    return dataBase.dataBase.none(this._query);
   }
 
-  updatePost(post, id) {
-    this._query = `UPDATE posts SET \"message\" = ${post.message}`;
+  getDetailedPost(post) {
+    this._query = `SELECT A.about userabout, A.email useremail, A.fullname userfullname, 
+    T.author threadauthor, T.created threadcreated, T.message threadmessage, T.slug threadslug, 
+    T.title threadtitle, 
+    F.posts forumposts, F.slug forumslug, F.threads forumthreads, 
+    F.title forumtitle, F.username forumuser 
+    FROM threads T INNER JOIN forums F ON (T.forum = F.id) INNER JOIN 
+    posts P ON (P.thread = T.id) INNER JOIN 
+    users A ON (P.author = A.nickname) 
+    WHERE P.id = ${post.id} AND 
+    A.nickname = \'${post.nickname}\' AND 
+    T.id = ${post.threadId} AND
+    F.slug = \'${post.forumSlug}\';`;
 
-    this.getPost(id)
-      .then(data => {
-        if (!data.length) {
-          return data;
-        }
-
-        if (data[0].message === post.message) {
-          this._query += ', isEdited = TRUE';
-        }
-
-        this._query += `WHERE id = ${id};`;
-        dataBase.dataBase.none(this._query);
-
-        return this.getPost(id);
-      });
+    return dataBase.dataBase.one(this._query);
   }
 }
 
-// public final PostDetailsModel getDetailedPostFromDb(final PostModel post, String[] related) {
-//       if (relation.equals("thread")) {
-//         ThreadService forumService = new ThreadService(jdbcTemplate);
-//         List<ThreadModel> threads = forumService.getThreadInfoById(post.getThread());
-//
-//         if (!threads.isEmpty()) {
-//           thread = threads.get(0);
-//         }
-//       }
-//     }
-//   }
-//
-//   return new PostDetailsModel(user, forum, post, thread);
-// }
+const postService = new PostService();
+
+module.exports.postService = postService;
