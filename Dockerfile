@@ -54,8 +54,8 @@ RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
 
 
-ADD . /nodeApi
-WORKDIR /nodeApi
+ADD . /db_technopark
+WORKDIR /db_technopark
 RUN npm install
 
 # Объявлем порт сервера
