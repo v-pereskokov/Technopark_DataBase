@@ -49,7 +49,7 @@ USER root
 
 
 RUN apt-get update
-RUN sudo apt-get install python3
+RUN apt-get install python3
 
 #Установка nodejs
 
