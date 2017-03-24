@@ -47,6 +47,8 @@ VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 # Back to the root user
 USER root
 
+RUN ls -la /usr/bin
+
 
 RUN apt-get update
 RUN apt-get install python3
