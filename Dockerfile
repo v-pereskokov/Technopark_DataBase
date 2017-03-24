@@ -49,9 +49,9 @@ USER root
 
 
 #Установка nodejs
-RUN npm install --python=python2.7
 
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
+RUN npm install --python=python2.7
 RUN apt-get install -y nodejs
 
 RUN npm config set python /usr/bin/python2.7 -g
