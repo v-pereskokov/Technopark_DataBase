@@ -48,6 +48,9 @@ VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 USER root
 
 
+RUN apt-get update
+RUN sudo apt-get install python3
+
 #Установка nodejs
 
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
