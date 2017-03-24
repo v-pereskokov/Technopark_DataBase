@@ -47,16 +47,14 @@ VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 # Back to the root user
 USER root
 
-RUN ls -la /usr/bin
-
-
-RUN apt-get update
-RUN apt-get install python3
 
 #Установка nodejs
 
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
+
+RUN npm config set python /usr/bin/python3.5 -g
+
 RUN apt-get install -y build-essential
 RUN npm install --global node-gyp
 
