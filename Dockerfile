@@ -54,6 +54,9 @@ RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install -g node-gyp
 
+RUN apt-get install libpq-dev
+RUN npm i pg-native
+
 
 ADD . /db_technopark
 WORKDIR /db_technopark
