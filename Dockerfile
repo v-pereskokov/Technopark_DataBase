@@ -55,8 +55,6 @@ RUN apt-get install -y nodejs
 RUN npm install -g node-gyp
 RUN npm install npm@latest -g
 
-RUN npm install libpq
-
 RUN apt-get install libpq-dev
 RUN npm i pg-native
 
