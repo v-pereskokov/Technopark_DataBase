@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 MAINTAINER Pereskokov Vladislav
 
 # Обвновление списка пакетов
-RUN apt-get -y update
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 
 #
 # Установка postgresql
