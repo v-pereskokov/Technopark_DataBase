@@ -53,6 +53,7 @@ USER root
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install -g node-gyp
+RUN npm install libpq
 
 RUN apt-get install libpq-dev
 RUN npm i pg-native
