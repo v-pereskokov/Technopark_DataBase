@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 MAINTAINER Pereskokov Vladislav
 
 # Обвновление списка пакетов
-RUN apt-get -y update
+RUN apt-get update
 
 #
 # Установка postgresql
@@ -52,6 +52,10 @@ USER root
 
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
+
+RUN npm install -g node-gyp
+RUN npm install libpq
+RUN npm i pg-native
 
 
 ADD . /db_technopark
