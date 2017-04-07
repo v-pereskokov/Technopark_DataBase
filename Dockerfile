@@ -10,7 +10,7 @@ RUN apt-get -y update
 #
 ENV PGVER 9.6
 
-RUN apt-get install -y wget curl
+RUN apt-get install -y wget curl python
 
 RUN echo deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main > /etc/apt/sources.list.d/pgdg.list
 
