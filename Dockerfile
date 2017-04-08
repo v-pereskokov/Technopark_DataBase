@@ -3,19 +3,14 @@ FROM ubuntu:16.04
 MAINTAINER Pereskokov Vladislav
 
 # Обвновление списка пакетов
-RUN apt-get update
+RUN apt-get -y update
 
 #
 # Установка postgresql
 #
 ENV PGVER 9.6
 
-RUN apt-get install -y wget curl python
-
-RUN echo deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main > /etc/apt/sources.list.d/pgdg.list
-
-RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
-         apt-key add -
+RUN apt-get install -y python
 
 RUN apt-get -y update
 
@@ -28,7 +23,7 @@ USER postgres
 # then create a database `docker` owned by the ``docker`` role.
 RUN /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
-    createdb -O docker docker &&\
+    createdb -E UTF8 -T template0 -O docker docker &&\
     /etc/init.d/postgresql stop
 
 # Adjust PostgreSQL configuration so that remote connections to the
