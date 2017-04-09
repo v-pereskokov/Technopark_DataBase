@@ -19,7 +19,7 @@ USER postgres
 # then create a database `docker` owned by the ``docker`` role.
 RUN /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
-    createdb -E UTF8 -T template0 -O docker docker &&\
+    createdb -O docker docker &&\
     /etc/init.d/postgresql stop
 
 # Adjust PostgreSQL configuration so that remote connections to the
@@ -43,11 +43,6 @@ USER root
 
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
-
-RUN npm install -g node-gyp
-RUN npm install libpq
-RUN npm i pg-native
-
 
 ADD . /db_technopark
 WORKDIR /db_technopark
