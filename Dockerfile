@@ -22,8 +22,6 @@ RUN apt-get -y update
 RUN apt-get install -y libpq-dev python-dev
 RUN apt-get install postgresql postgresql-contrib -y
 
-RUN pip install psycopg2
-
 RUN apt-get install -y postgresql-$PGVER
 
 # Run the rest of the commands as the ``postgres`` user created by the ``postgres-$PGVER`` package when it was ``apt-get installed``
