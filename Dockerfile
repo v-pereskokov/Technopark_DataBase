@@ -9,14 +9,17 @@ RUN apt-get -y update
 # Установка postgresql
 #
 ENV PGVER 9.6
+
 RUN apt-get install -y wget curl
 
 RUN echo deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main > /etc/apt/sources.list.d/pgdg.list
 
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
          apt-key add -
+
+RUN apt-get -y update
+
 RUN apt-get install -y postgresql-$PGVER
-RUN apt-get install -y libpq-dev
 
 # Run the rest of the commands as the ``postgres`` user created by the ``postgres-$PGVER`` package when it was ``apt-get installed``
 USER postgres
@@ -49,6 +52,7 @@ USER root
 
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
+
 
 ADD . /db_technopark
 WORKDIR /db_technopark
