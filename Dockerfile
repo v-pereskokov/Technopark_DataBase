@@ -11,6 +11,7 @@ RUN apt-get -y update
 ENV PGVER 9.6
 RUN apt-get install -y wget curl python
 RUN apt-get install -y postgresql-$PGVER
+RUN apt-get install -y libpq-dev
 
 # Run the rest of the commands as the ``postgres`` user created by the ``postgres-$PGVER`` package when it was ``apt-get installed``
 USER postgres
