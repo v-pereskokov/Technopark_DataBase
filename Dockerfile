@@ -9,6 +9,16 @@ RUN apt-get -y update
 # Установка postgresql
 #
 ENV PGVER 9.6
+
+RUN apt-get install -y wget curl python
+
+RUN echo deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main > /etc/apt/sources.list.d/pgdg.list
+
+RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
+         apt-key add -
+
+RUN apt-get -y update
+
 RUN apt-get install -y postgresql-$PGVER
 
 # Run the rest of the commands as the ``postgres`` user created by the ``postgres-$PGVER`` package when it was ``apt-get installed``
@@ -36,6 +46,7 @@ VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
 # Back to the root user
 USER root
+
 
 #Установка nodejs
 
