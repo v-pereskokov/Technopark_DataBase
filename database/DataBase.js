@@ -11,11 +11,12 @@ class DataBase {
 }
 
 const dataBase = new DataBase({
+  user: 'docker',
+  database: 'docker',
+  password: 'docker',
   host: 'localhost',
-  port: 5432,
-  database: 'postgres',
-  user: 'postgres',
-  password: 'L13101997da'
+  port: 5432
 });
 
 module.exports.dataBase = dataBase.getController();
+

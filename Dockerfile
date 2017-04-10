@@ -47,6 +47,8 @@ VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 # Back to the root user
 USER root
 
+RUN apt-get install libpq-dev -y
+RUN apt-get install build-essential -y
 
 #Установка nodejs
 

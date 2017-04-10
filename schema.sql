@@ -1,49 +1,55 @@
-\c docker;
+DROP Table IF EXISTS users CASCADE;
 
-DROP TABLE IF EXISTS vote CASCADE;
-DROP TABLE IF EXISTS post CASCADE;
-DROP TABLE IF EXISTS thread CASCADE;
-DROP INDEX IF EXISTS unique_slug_forum;
-DROP TABLE IF EXISTS forum CASCADE;
-DROP INDEX IF EXISTS unique_email;
-DROP INDEX IF EXISTS unique_nickname;
-DROP TABLE IF EXISTS "user" CASCADE;
+CREATE TABLE IF NOT EXISTS users (
+  nickname VARCHAR PRIMARY KEY,
+  fullname VARCHAR,
+  about TEXT,
+  email VARCHAR NOT NULL UNIQUE
+);
 
-CREATE TABLE IF NOT EXISTS  "user" (
-                id SERIAL NOT NULL PRIMARY KEY,
-                about TEXT,
-                nickname VARCHAR(30) NOT NULL UNIQUE,
-                fullname VARCHAR(100),
-                email VARCHAR(50) NOT NULL UNIQUE);
+DROP Table IF EXISTS forums CASCADE;
 
-CREATE TABLE IF NOT EXISTS  forum (
-                id SERIAL NOT NULL PRIMARY KEY,
-                slug VARCHAR(100),
-                title VARCHAR(100) NOT NULL ,
-                user_id INT REFERENCES "user"(id) NOT NULL);
+CREATE TABLE IF NOT EXISTS forums (
+  id SERIAL NOT NULL PRIMARY KEY,
+  title VARCHAR NOT NULL,
+  username VARCHAR NOT NULL REFERENCES users (nickname),
+  slug VARCHAR NOT NULL UNIQUE,
+  posts INTEGER DEFAULT 0,
+  threads INTEGER DEFAULT 0
+);
 
-CREATE TABLE IF NOT EXISTS  thread (
-                id SERIAL NOT NULL PRIMARY KEY,
-                user_id INT REFERENCES "user"(id) NOT NULL,
-                created TIMESTAMP,
-                forum_id INT REFERENCES forum(id) NOT NULL,
-                message TEXT,
-                slug VARCHAR(100),
-                title VARCHAR(100) NOT NULL);
+DROP Table IF EXISTS threads CASCADE;
 
-CREATE TABLE IF NOT EXISTS post (
-                id SERIAL NOT NULL PRIMARY KEY,
-                user_id INT REFERENCES "user"(id) NOT NULL ,
-                created TIMESTAMP,
-                forum_id INT REFERENCES forum(id) NOT NULL ,
-                isEdited BOOLEAN DEFAULT FALSE,
-                message TEXT,
-                parent_id INT,
-                thread_id INT REFERENCES thread(id) NOT NULL);
+CREATE TABLE IF NOT EXISTS threads (
+  id SERIAL NOT NULL PRIMARY KEY,
+  author VARCHAR NOT NULL REFERENCES users (nickname),
+  created TIMESTAMP WITH TIME ZONE,
+  forum INTEGER NOT NULL REFERENCES forums (id),
+  message TEXT NOT NULL,
+  slug VARCHAR UNIQUE,
+  title VARCHAR NOT NULL,
+  votes INTEGER DEFAULT 0
+);
 
-CREATE TABLE IF NOT EXISTS  vote (
-                id SERIAL NOT NULL PRIMARY KEY,
-                user_id INT REFERENCES "user"(id) NOT NULL,
-                voice SMALLINT,
-                thread_id INT REFERENCES thread(id) NOT NULL,
-                UNIQUE (user_id, thread_id));
+DROP Table IF EXISTS posts CASCADE;
+
+CREATE TABLE IF NOT EXISTS posts (
+  id SERIAL NOT NULL PRIMARY KEY,
+  author VARCHAR NOT NULL REFERENCES users (nickname),
+  created TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
+  forum VARCHAR,
+  isEdited BOOLEAN DEFAULT FALSE,
+  message TEXT NOT NULL,
+  parent INTEGER DEFAULT 0,
+  thread INTEGER NOT NULL REFERENCES threads (id)
+);
+
+DROP Table IF EXISTS votes CASCADE;
+
+CREATE TABLE IF NOT EXISTS votes (
+  id SERIAL NOT NULL PRIMARY KEY,
+  username VARCHAR NOT NULL REFERENCES users (nickname),
+  voice INTEGER,
+  thread INTEGER NOT NULL REFERENCES threads (id),
+  UNIQUE (username, thread)
+);
