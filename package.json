@@ -21,7 +21,7 @@
     "webpack": "^2.6.1"
   },
   "scripts": {
-    "webpack-prod": "./node_modules/.bin/webpack --config webpack.config.prod.js -p",
+    "webpack-prod": "./node_modules/.bin/webpack --config webpack.config.prod.js",
     "webpack-dev": "./node_modules/.bin/webpack --config webpack.config.dev.js",
     "start": "node ./built/bundle.js"
   },
