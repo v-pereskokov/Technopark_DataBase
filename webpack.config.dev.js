@@ -8,7 +8,8 @@ module.exports = {
     filename: 'built/bundle.js'
   },
 
-  devtool: 'sourcemap',
+  target: 'node',
+  watch: true,
 
   module: {
     loaders: [{

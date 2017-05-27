@@ -1,8 +1,11 @@
-import top from './top';
+const Koa = require('koa');
+const bodyParser = require('koa-bodyparser');
 
-async function bar() {
-  await top();
-  console.log('after foo');
-}
+const app = new Koa();
 
-bar();
+const port = process.env.PORT || 5000;
+
+app
+  .use(bodyParser());
+
+app.listen(port, () => console.log('Server is running on port: ', port));
