@@ -1,8 +1,7 @@
-const Koa = require('koa');
-const bodyParser = require('koa-bodyparser');
+import Koa from 'koa';
+import bodyParser from 'koa-bodyparser';
 
 const app = new Koa();
-
 const port = process.env.PORT || 5000;
 
 app
