@@ -59,6 +59,7 @@ RUN apt-get install -y nodejs
 ADD . /db_technopark
 WORKDIR /db_technopark
 RUN npm install
+RUN npm run webpack-prod
 
 # Объявлем порт сервера
 EXPOSE 5000

@@ -7,11 +7,9 @@ class UserController {
       body['nickname'] = ctx.params.nickname;
 
       try {
-        const data = await userService.getUser(body.nickname, body.email);
-        ctx.body = data;
+        ctx.body = await userService.getUser(body.nickname, body.email);
         ctx.status = 409;
 
-        console.log(data);
         resolve();
       } catch(e) {
         await userService.create(body);
@@ -19,8 +17,42 @@ class UserController {
         ctx.body = body;
         ctx.status = 201;
 
-        console.log(e);
+        resolve();
+      }
+    });
+  }
 
+  get(ctx, next) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        ctx.body = await userService.getUserByNickname(ctx.params.nickname);;
+        ctx.status = 200;
+
+        resolve();
+      } catch(e) {
+        ctx.body = 'Not Found!';
+        ctx.status = 404;
+
+        resolve();
+      }
+    });
+  }
+
+  update(ctx, next) {
+    return new Promise(async (resolve, reject) => {
+      let body = ctx.request.body;
+      body['nickname'] = ctx.params.nickname;
+
+      try {
+        const response = await userService.update(body);
+
+        ctx.body = response;
+        ctx.status = 200;
+        resolve();
+      } catch(e) {
+        console.log(e);
+        ctx.body = e;
+        ctx.status = 500;
         resolve();
       }
     });
