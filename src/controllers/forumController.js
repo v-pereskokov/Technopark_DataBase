@@ -5,17 +5,31 @@ class ForumController {
   create(ctx, next) {
     return new Promise(async (resolve, reject) => {
       const body = ctx.request.body;
+
       try {
         await forumService.create(body);
 
-        //set user?
+        body.user = (await userService.getNickname(body.user)).nickname;
+
         ctx.body = body;
         ctx.status = 201;
 
         resolve();
       } catch (e) {
-        ctx.body = e;
-        ctx.status = 500;
+        console.log(e);
+
+        switch (+e.code) {
+          case 23502:
+            ctx.body = '';
+            ctx.status = 404;
+            break;
+          case 23505:
+            ctx.body = await forumService.get(body.slug);
+            ctx.status = 409;
+            break;
+          default:
+            break;
+        }
 
         resolve();
       }
@@ -25,8 +39,9 @@ class ForumController {
   get(ctx, next) {
     return new Promise(async (resolve, reject) => {
       try {
-        ctx.body = await forumService.get(ctx.params.slug);
-        ctx.status = 200;
+        const data = await forumService.get(ctx.params.slug);
+        ctx.body = data;
+        ctx.status = data ? 200 : 404;
 
         resolve();
       } catch(e) {

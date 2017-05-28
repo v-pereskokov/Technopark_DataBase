@@ -17,7 +17,7 @@ class ForumService {
     FROM forums f 
     WHERE lower(f.slug) = lower('${slug}');`;
 
-    return dataBase.one(this._query);
+    return dataBase.oneOrNone(this._query);
   }
 
   getSlug(slug) {

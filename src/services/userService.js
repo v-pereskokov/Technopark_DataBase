@@ -40,6 +40,12 @@ class UserService {
 
     return dataBase.none(this._query);
   }
+
+  getNickname(nickname) {
+    this._query = `SELECT u.nickname FROM users u WHERE lower(nickname) = lower('${nickname}');`;
+
+    return dataBase.oneOrNone(this._query);
+  }
 }
 
 const userService = new UserService();

@@ -50,8 +50,6 @@ class UserController {
 
         resolve();
       } catch(e) {
-        console.log(e);
-
         switch (+e.code) {
           case 23505:
             ctx.body = body;
