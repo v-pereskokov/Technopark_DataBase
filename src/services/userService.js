@@ -13,8 +13,10 @@ class UserService {
   }
 
   update(user) {
-    this._query = `UPDATE users SET (fullname, email, about)
-     = ('${user.fullname}', '${user.email}', '${user.about}') 
+    this._query = `UPDATE users SET 
+    fullname = COALESCE(${user.fullname ? `'${user.fullname}'` : 'NULL'}, fullname), 
+    email = COALESCE(${user.email ? `'${user.email}'` : 'NULL'}, email),
+    about = COALESCE(${user.about ? `'${user.about}'` : 'NULL'}, about) 
     WHERE LOWER(nickname) = LOWER(\'${user.nickname}\') RETURNING *;`;
 
     return dataBase.oneOrNone(this._query);

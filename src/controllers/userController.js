@@ -44,15 +44,23 @@ class UserController {
       body['nickname'] = ctx.params.nickname;
 
       try {
-        const response = await userService.update(body);
+        const data = await userService.update(body);
+        ctx.body = data;
+        ctx.status = data ? 200 : 404;
 
-        ctx.body = response;
-        ctx.status = 200;
         resolve();
       } catch(e) {
         console.log(e);
-        ctx.body = e;
-        ctx.status = 500;
+
+        switch (+e.code) {
+          case 23505:
+            ctx.body = body;
+            ctx.status = 409;
+            break;
+          default:
+            break;
+        }
+
         resolve();
       }
     });
