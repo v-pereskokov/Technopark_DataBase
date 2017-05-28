@@ -17,8 +17,6 @@ class UserService {
      = ('${user.fullname}', '${user.email}', '${user.about}') 
     WHERE LOWER(nickname) = LOWER(\'${user.nickname}\') RETURNING *;`;
 
-    console.log(this._query);
-
     return dataBase.oneOrNone(this._query);
   }
 

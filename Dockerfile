@@ -2,12 +2,10 @@ FROM ubuntu:16.04
 
 MAINTAINER Pereskokov Vladislav
 
-# Обвновление списка пакетов
+# Update packages
 RUN apt-get -y update
 
-#
-# Установка postgresql
-#
+# Install postgresql
 ENV PGVER 9.6
 
 RUN apt-get install -y wget curl python
@@ -50,22 +48,18 @@ USER root
 RUN apt-get install libpq-dev -y
 RUN apt-get install build-essential -y
 
-#Установка nodejs
-
+# Install nodejs
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
-
 
 ADD . /db_technopark
 WORKDIR /db_technopark
 RUN npm install
 RUN npm run webpack-prod
 
-# Объявлем порт сервера
+# Set port
 EXPOSE 5000
 
-#
-# Запускаем PostgreSQL и сервер
-#
+# Run PostgreSQL и server
 ENV PGPASSWORD docker
 CMD service postgresql start && psql -h localhost -U docker -d docker -f schema.sql && npm start
