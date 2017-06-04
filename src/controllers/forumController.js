@@ -1,5 +1,7 @@
 import forumService from '../services/forumService';
 import userService from '../services/userService';
+import threadService from '../services/threadService';
+import {isEmpty} from '../tools/isEmpty';
 
 class ForumController {
   create(ctx, next) {
@@ -48,6 +50,38 @@ class ForumController {
         ctx.body = 'Not Found';
         ctx.status = 404;
 
+        resolve();
+      }
+    });
+  }
+
+  createThread(ctx, next) {
+    return new Promise(async (resolve, reject) => {
+      const author = ctx.request.body.author;
+      const created = ctx.request.body.created;
+      const title = ctx.request.body.title;
+      const message = ctx.request.body.message;
+
+      let forum = ctx.request.body.forum;
+      let slug = !isEmpty(ctx.request.body.slug) ? ctx.request.body.slug :
+        ctx.params.slug;
+
+      try {
+        ctx.body = await threadService.create({
+          username: author,
+          created,
+          forum,
+          slug,
+          message,
+          title
+        });
+        ctx.status = 201;
+
+        resolve();
+      } catch(e) {
+        console.log(e);
+        ctx.body = e;
+        ctx.status = 500;
         resolve();
       }
     });
