@@ -18,7 +18,6 @@ class ForumController {
 
         resolve();
       } catch (e) {
-        console.log(e);
         switch (+e.code) {
           case 23502:
             ctx.body = e;
@@ -88,7 +87,6 @@ class ForumController {
 
         resolve();
       } catch(e) {
-        console.log(e);
         ctx.body = e;
         ctx.status = 500;
         resolve();
@@ -105,15 +103,37 @@ class ForumController {
 
       try {
         const slugs = await forumService.getSlug(slug);
+        const result = await threadService.getForumThreads(slugs.slug, limit, since, desc);
+        const top = [];
 
-        ctx.body = await threadService.getForumThreads(slugs, limit, since, desc);
+        if (result) {
+          for (let thread of result) {
+            top.push({
+              id: +thread.id,
+              slug: thread.slug,
+              author: thread.author,
+              forum: thread.forum,
+              created: thread.created,
+              message: thread.message,
+              title: thread.title,
+              votes: +thread.votes
+            });
+          }
+        }
+
+        ctx.body = top;
         ctx.status = 200;
       } catch(e) {
-        ctx.body = '';
-        ctx.status = 404;
-      } finally {
-        resolve();
+        if (e.query.indexOf('ORDER BY') !== -1) {
+          ctx.body = [];
+          ctx.status = 200;
+        } else {
+          ctx.body = '';
+          ctx.status = 404;
+        }
       }
+
+      resolve();
     });
   }
 }

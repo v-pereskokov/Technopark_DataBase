@@ -5,6 +5,7 @@ class ThreadService extends BaseService {
     super();
   }
 
+  // optimize created?
   create(data) {
     this._query = `INSERT INTO threads (author, created, forum, message, slug, title) 
     VALUES ((SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower('${data.username}')), 
@@ -14,7 +15,6 @@ class ThreadService extends BaseService {
     '${data.title}') 
     RETURNING *`;
 
-    console.log(this._query);
     return this._dataBase.one(this._query);
   }
 
@@ -27,21 +27,46 @@ class ThreadService extends BaseService {
     return this._dataBase.one(this._query);
   }
 
+  f() {
+    queryBuilder.append("SELECT t.id, t.slug, t.author, ")
+      .append(" t.forum, t.created, t.message, t.title, t.votes ")
+      .append("FROM ")
+      .append("threads t ")
+      .append("WHERE lower(t.forum) = lower(?) ");
+
+    if (since != null) {
+      if (desc) {
+        queryBuilder.append("AND t.created <= '").append(since).append("'::TIMESTAMPTZ ")
+          .append(" ORDER BY t.created DESC ");
+      } else {
+        queryBuilder.append("AND t.created >= '").append(since).append("'::TIMESTAMPTZ ")
+          .append(" ORDER BY t.created ASC ");
+      }
+    } else {
+      queryBuilder.append("ORDER BY t.created ");
+      if (desc) {
+        queryBuilder.append("DESC ");
+      } else {
+        queryBuilder.append("ASC ");
+      }
+    }
+
+    queryBuilder.append("LIMIT ?");
+  }
   getForumThreads(slug, limit, since, desc) {
-    this._query = `SELECT t.id, t.slug, t.author, 
-    t.forum, t.created, t.message, t.title, t.votes 
-    FROM 
-    threads t 
+    this._query = `SELECT t.id, t.slug, t.author,
+    t.forum, t.created, t.message, t.title, t.votes
+    FROM
+    threads t
     WHERE lower(t.forum) = lower('${slug}') `;
 
     if (since) {
       this._query += 'AND t.created';
-      this._query += desc ? ` <= ` :
-        ` >= `;
+      this._query += desc === 'true' ? ` <= ` : ` >= `;
       this._query += `'${since}'::TIMESTAMPTZ `;
     }
 
-    this._query += `ORDER BY t.created ${desc ? 'DESC' : 'ASC '} LIMIT ${limit}`;
+    this._query += `ORDER BY t.created ${desc === 'true' ? 'DESC' : 'ASC '} LIMIT ${+limit}`;
 
     return this._dataBase.many(this._query);
   }
