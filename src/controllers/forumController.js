@@ -18,9 +18,10 @@ class ForumController {
 
         resolve();
       } catch (e) {
+        console.log(e);
         switch (+e.code) {
           case 23502:
-            ctx.body = '';
+            ctx.body = e;
             ctx.status = 404;
             break;
           case 23505:
@@ -34,11 +35,6 @@ class ForumController {
         resolve();
       }
     });
-
-    return "SELECT f.posts, f.slug, f.threads, f.title, u.nickname " +
-      "FROM forums f " +
-      "  JOIN users u ON (f.user_id = u.id)" +
-      "  WHERE f.slug = ?";
   }
 
   get(ctx, next) {
@@ -69,27 +65,22 @@ class ForumController {
         ctx.params.slug;
 
       try {
-        const id = await threadService.threadInsert({
+        const result = await threadService.create({
           username,
           created,
-          title,
-          message,
+          forum,
           slug,
-          forum
+          message,
+          title
         });
 
-        console.log('here');
-        const result = await threadService.getThreadBySlugOrId(id.thread_insert);
-        console.log(result);
-
-
         ctx.body = {
+          id: +result.id,
           author: result.author,
           created: result.created,
           forum: result.forum,
-          id: +result.id,
           message: result.message,
-          slug: result.forum === result.t_slug ? '' : result.t_slug,
+          slug: result.slug === result.forum ? '' : result.slug,
           title: result.title,
           votes: +result.votes
         };
@@ -98,19 +89,8 @@ class ForumController {
         resolve();
       } catch(e) {
         console.log(e);
-        switch (+e.code) {
-          case 23502:
-            ctx.body = e;
-            ctx.status = 404;
-            break;
-          case 23505:
-            ctx.body = await threadService.getBySlug(slug);
-            ctx.status = 409;
-            break;
-          default:
-            break;
-        }
-
+        ctx.body = e;
+        ctx.status = 500;
         resolve();
       }
     });

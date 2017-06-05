@@ -6,9 +6,9 @@ class ForumService extends BaseService {
   }
 
   create(user) {
-    this._query = `INSERT INTO forums (user_id, slug, title) 
+    this._query = `INSERT INTO forums ("user", slug, title) 
     VALUES (
-    (SELECT id FROM users WHERE lower(nickname) = lower(\'${user.user}\')),
+    (SELECT nickname FROM users WHERE lower(nickname) = lower('${user.user}')),
     '${user.slug}', 
     '${user.title}'
     );`;
@@ -17,9 +17,8 @@ class ForumService extends BaseService {
   }
 
   get(slug) {
-    this._query = `SELECT f.user_id, f.title, f.slug, f.posts, f.threads, u.nickname as user 
+    this._query = `SELECT f.id, f.title, f."user", f.slug, f.posts, f.threads 
     FROM forums f 
-    JOIN users u ON (f.user_id = u.id) 
     WHERE lower(f.slug) = lower('${slug}');`;
 
     return this._dataBase.one(this._query);

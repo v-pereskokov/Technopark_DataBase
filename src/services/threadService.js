@@ -5,28 +5,16 @@ class ThreadService extends BaseService {
     super();
   }
 
-  threadInsert(data) {
-    this._query = `SELECT thread_insert(
-    '${data.username}', 
-    ${data.created ? `'${data.created}'` : 'current_timestamp'}, 
-    '${data.forum}', 
-    '${data.message}', 
-    '${data.slug}', 
-    '${data.title}'
-    )`;
+  create(data) {
+    this._query = `INSERT INTO threads (author, created, forum, message, slug, title) 
+    VALUES ((SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower('${data.username}')), 
+    ${data.created ? `'${data.created}'::TIMESTAMPTZ` : 'current_timestamp'},
+    (SELECT f.slug FROM forums f WHERE lower(f.slug) = lower('${data.forum}')), 
+    '${data.message}', '${data.slug}', 
+    '${data.title}') 
+    RETURNING *`;
 
     console.log(this._query);
-
-    return this._dataBase.oneOrNone(this._query);
-  }
-
-  getThreadBySlugOrId(slugOrId) {
-    this._query = `SELECT u.nickname as author, t.created, f.slug AS forum, t.id, t.message, t.slug AS t_slug, t.title, t.votes 
-    FROM threads t 
-    JOIN users u ON (t.user_id = u.id) 
-    JOIN forums f ON (t.forum_id = f.id) 
-    WHERE ${+slugOrId ? `t.id = ${+slugOrId}` : `LOWER(t.slug) = LOWER(${slugOrId})`}`;
-
     return this._dataBase.one(this._query);
   }
 
