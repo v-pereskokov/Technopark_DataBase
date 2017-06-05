@@ -1,9 +1,12 @@
-// import Router from 'koa-router';
-// import forumController from '../controllers/forumController';
-//
-// const forumRouter = new Router();
-//
-// forumRouter.post('/api/forum/create', forumController.create);
-// forumRouter.get('/api/forum/:slug/details', forumController.get);
-//
-// export default forumRouter;
+import Router from 'koa-router';
+import threadController from '../controllers/threadController';
+
+const threadRouter = new Router();
+
+threadRouter.post('/api/thread/:slug_or_id/create', threadController.create);
+// threadRouter.post('/api/thread/:slug_or_id/vote', threadController.createVote);
+// threadRouter.get('/api/thread/:slug_or_id/details', threadController.getThread);
+// threadRouter.post('/api/thread/:slug_or_id/details', threadController.updateThread);
+// threadRouter.get('/api/thread/:slug_or_id/posts', threadController.getPosts);
+
+export default threadRouter;

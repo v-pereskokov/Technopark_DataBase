@@ -18,11 +18,21 @@ class ThreadService extends BaseService {
     return this._dataBase.one(this._query);
   }
 
-  getBySlug(slug) {
-    this._query = `SELECT t.id, t.author, t.forum, 
-    t.slug, t.created, t.message, t.title, t.votes FROM 
+  findThreadById(id) {
+    this._query = `SELECT t.id, t.slug, t.author, t.created, t.forum, t.message, t.title, t.votes 
+    FROM 
     threads t 
-    WHERE lower(t.slug) = lower('${slug}')`;
+    WHERE t.id = '${id}'`;
+
+    this._dataBase.one(this._query);
+  }
+
+  findThreadBySlug(slug) {
+    this._query = `SELECT t.id, t.author, t.forum, 
+    t.slug, t.created, t.message, t.title, t.votes 
+    FROM 
+    threads t 
+    WHERE LOWER(t.slug) = LOWER('${slug}')`;
 
     return this._dataBase.one(this._query);
   }
@@ -32,7 +42,7 @@ class ThreadService extends BaseService {
     t.forum, t.created, t.message, t.title, t.votes
     FROM
     threads t
-    WHERE lower(t.forum) = lower('${slug}') `;
+    WHERE LOWER(t.forum) = LOWER('${slug}') `;
 
     if (since) {
       this._query += 'AND t.created';
