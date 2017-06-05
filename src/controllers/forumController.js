@@ -18,8 +18,6 @@ class ForumController {
 
         resolve();
       } catch (e) {
-        console.log(e);
-
         switch (+e.code) {
           case 23502:
             ctx.body = '';
@@ -36,14 +34,18 @@ class ForumController {
         resolve();
       }
     });
+
+    return "SELECT f.posts, f.slug, f.threads, f.title, u.nickname " +
+      "FROM forums f " +
+      "  JOIN users u ON (f.user_id = u.id)" +
+      "  WHERE f.slug = ?";
   }
 
   get(ctx, next) {
     return new Promise(async (resolve, reject) => {
       try {
-        const data = await forumService.get(ctx.params.slug);
-        ctx.body = data;
-        ctx.status = data ? 200 : 404;
+        ctx.body = await forumService.get(ctx.params.slug);
+        ctx.status = 200;
 
         resolve();
       } catch(e) {
@@ -57,7 +59,7 @@ class ForumController {
 
   createThread(ctx, next) {
     return new Promise(async (resolve, reject) => {
-      const author = ctx.request.body.author;
+      const username = ctx.request.body.author;
       const created = ctx.request.body.created;
       const title = ctx.request.body.title;
       const message = ctx.request.body.message;
@@ -67,21 +69,69 @@ class ForumController {
         ctx.params.slug;
 
       try {
-        ctx.body = await threadService.create({
-          username: author,
+        const id = await threadService.threadInsert({
+          username,
           created,
-          forum,
-          slug,
+          title,
           message,
-          title
+          slug,
+          forum
         });
+
+        console.log('here');
+        const result = await threadService.getThreadBySlugOrId(id.thread_insert);
+        console.log(result);
+
+
+        ctx.body = {
+          author: result.author,
+          created: result.created,
+          forum: result.forum,
+          id: +result.id,
+          message: result.message,
+          slug: result.forum === result.t_slug ? '' : result.t_slug,
+          title: result.title,
+          votes: +result.votes
+        };
         ctx.status = 201;
 
         resolve();
       } catch(e) {
         console.log(e);
-        ctx.body = e;
-        ctx.status = 500;
+        switch (+e.code) {
+          case 23502:
+            ctx.body = e;
+            ctx.status = 404;
+            break;
+          case 23505:
+            ctx.body = await threadService.getBySlug(slug);
+            ctx.status = 409;
+            break;
+          default:
+            break;
+        }
+
+        resolve();
+      }
+    });
+  }
+
+  getThreads(ctx, next) {
+    return new Promise(async (resolve, reject) => {
+      const desc = ctx.query.desc;
+      const limit = ctx.query.limit;
+      const since = ctx.query.since;
+      const slug = ctx.params.slug;
+
+      try {
+        const slugs = await forumService.getSlug(slug);
+
+        ctx.body = await threadService.getForumThreads(slugs, limit, since, desc);
+        ctx.status = 200;
+      } catch(e) {
+        ctx.body = '';
+        ctx.status = 404;
+      } finally {
         resolve();
       }
     });

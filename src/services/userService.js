@@ -6,7 +6,7 @@ class UserService extends BaseService {
   }
 
   create(user) {
-    this._query = `INSERT INTO users (nickname, email, fullname, about)
+    this._query = `INSERT INTO users (nickname, email, fullname, about) 
     VALUES (\'${user.nickname}\', \'${user.email}\', \'${user.fullname}\', \'${user.about}\');`;
 
     return this._dataBase.none(this._query);
@@ -17,7 +17,7 @@ class UserService extends BaseService {
     fullname = COALESCE(${user.fullname ? `'${user.fullname}'` : 'NULL'}, fullname), 
     email = COALESCE(${user.email ? `'${user.email}'` : 'NULL'}, email),
     about = COALESCE(${user.about ? `'${user.about}'` : 'NULL'}, about) 
-    WHERE LOWER(nickname) = LOWER(\'${user.nickname}\') RETURNING *;`;
+    WHERE LOWER(nickname) = LOWER(\'${user.nickname}\')`;
 
     return this._dataBase.oneOrNone(this._query);
   }
@@ -44,7 +44,7 @@ class UserService extends BaseService {
   getNickname(nickname) {
     this._query = `SELECT u.nickname FROM users u WHERE lower(nickname) = lower('${nickname}');`;
 
-    return this._dataBase.oneOrNone(this._query);
+    return this._dataBase.one(this._query);
   }
 }
 
