@@ -27,32 +27,6 @@ class ThreadService extends BaseService {
     return this._dataBase.one(this._query);
   }
 
-  f() {
-    queryBuilder.append("SELECT t.id, t.slug, t.author, ")
-      .append(" t.forum, t.created, t.message, t.title, t.votes ")
-      .append("FROM ")
-      .append("threads t ")
-      .append("WHERE lower(t.forum) = lower(?) ");
-
-    if (since != null) {
-      if (desc) {
-        queryBuilder.append("AND t.created <= '").append(since).append("'::TIMESTAMPTZ ")
-          .append(" ORDER BY t.created DESC ");
-      } else {
-        queryBuilder.append("AND t.created >= '").append(since).append("'::TIMESTAMPTZ ")
-          .append(" ORDER BY t.created ASC ");
-      }
-    } else {
-      queryBuilder.append("ORDER BY t.created ");
-      if (desc) {
-        queryBuilder.append("DESC ");
-      } else {
-        queryBuilder.append("ASC ");
-      }
-    }
-
-    queryBuilder.append("LIMIT ?");
-  }
   getForumThreads(slug, limit, since, desc) {
     this._query = `SELECT t.id, t.slug, t.author,
     t.forum, t.created, t.message, t.title, t.votes
