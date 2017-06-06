@@ -87,11 +87,18 @@ class ForumController {
 
         resolve();
       } catch(e) {
-        const conflict = await threadService.findThreadBySlug(slug);
-        ctx.body = Object.assign(conflict, {
-          id: +conflict.id
-        });
-        ctx.status = 409;
+        try {
+          const conflict = await threadService.findThreadBySlug(slug);
+
+          ctx.body = Object.assign(conflict, {
+            id: +conflict.id
+          });
+          ctx.status = 409;
+        } catch(e) {
+          ctx.body = '';
+          ctx.status = 404;
+        }
+
         resolve();
       }
     });
