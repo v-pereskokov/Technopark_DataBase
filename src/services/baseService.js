@@ -5,4 +5,12 @@ export default class BaseService {
     this._query = '';
     this._dataBase = dataBase;
   }
+
+  get dataBase() {
+    return this._dataBase;
+  }
+
+  get query() {
+    return this._query;
+  }
 }

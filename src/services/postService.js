@@ -5,12 +5,15 @@ class PostService extends BaseService {
     super();
   }
 
-  getCreateBatch() {
+  getCreateBatch(data) {
     this._query = `INSERT INTO posts 
     (id, author, created, forum, is_edited, message, parent, path, thread_id) 
-    VALUES ($1, (SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower($2)), $3::TIMESTAMPTZ, 
-    (SELECT f.slug FROM forums f WHERE lower(f.slug) = lower($4)), $5, $6, $7, 
-    (SELECT path FROM posts WHERE id = $8) || $9::BIGINT, $10) `;
+    VALUES (${data.postId}, (SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower('${data.author}')), 
+    '${data.created}'::TIMESTAMPTZ, 
+    (SELECT f.slug FROM forums f WHERE lower(f.slug) = lower('${data.forum}')), 
+    ${data.isEdited}, '${data.message}', ${data.parent ? `${data.parent}` : 'NULL'}, 
+    (SELECT path FROM posts WHERE id = ${data.parent ? `${data.parent}` : 'NULL'}) || ${data.postId}::BIGINT, ${data.threadId}) 
+    RETURNING *`;
 
     return {
       dataBase: this._dataBase,

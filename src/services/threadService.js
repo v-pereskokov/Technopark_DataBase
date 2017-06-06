@@ -22,9 +22,9 @@ class ThreadService extends BaseService {
     this._query = `SELECT t.id, t.slug, t.author, t.created, t.forum, t.message, t.title, t.votes 
     FROM 
     threads t 
-    WHERE t.id = '${id}'`;
+    WHERE t.id = ${id}`;
 
-    this._dataBase.one(this._query);
+    return this._dataBase.one(this._query);
   }
 
   findThreadBySlug(slug) {
