@@ -60,19 +60,27 @@ class ThreadController {
         // });
 
         await postService.updateForums(body.length, thread.forum);
-        // console.log(result);
-
         const result = await postService.dataBase.any(data.query);
 
-
-        ctx.body = {
+        console.log(result);
+        console.log('\n');
+        console.log([{
           author: result[0].author,
           created: result[0].created,
+          thread: result[0].thread,
           forum: result[0].forum,
-          id: +result[0].id,
           message: result[0].message,
-          thread: result[0].thread
-        };
+          id: +result[0].id
+        }]);
+
+        ctx.body = [{
+          author: result[0].author,
+          created: result[0].created,
+          thread: +result[0].thread_id,
+          forum: result[0].forum,
+          message: result[0].message,
+          id: +result[0].id
+        }];
         ctx.status = 201;
 
         resolve();
