@@ -13,4 +13,8 @@ export default class BaseService {
   get query() {
     return this._query;
   }
+
+  set query(string) {
+    this._query = string;
+  }
 }

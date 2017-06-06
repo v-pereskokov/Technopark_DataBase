@@ -5,8 +5,31 @@ class PostService extends BaseService {
     super();
   }
 
-  getCreateBatch(data) {
-    this._query = `INSERT INTO posts 
+  createAsBatch(posts, thread) {
+    return this.dataBase.tx(async (transaction) => {
+      const queries = [];
+
+      for (let post of posts) {
+        const id = await this.getNextId();
+
+        queries.push(transaction.any(this.getCreateBatchQuery({
+          postId: +id.id,
+          author: post.author,
+          created: new Date().toISOString(),
+          forum: thread.forum,
+          isEdited: post.is_edited ? post.is_edited : 'FALSE',
+          message: post.message,
+          parent: post.parent,
+          threadId: thread.id
+        })));
+      }
+
+      return await transaction.batch(queries);
+    });
+  }
+
+  getCreateBatchQuery(data) {
+    this.query = `INSERT INTO posts 
     (id, author, created, forum, is_edited, message, parent, path, thread_id) 
     VALUES (${data.postId}, (SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower('${data.author}')), 
     '${data.created}'::TIMESTAMPTZ, 
@@ -15,17 +38,20 @@ class PostService extends BaseService {
     (SELECT path FROM posts WHERE id = ${data.parent ? `${data.parent}` : 'NULL'}) || ${data.postId}::BIGINT, ${data.threadId}) 
     RETURNING *`;
 
-    return {
-      dataBase: this._dataBase,
-      query: this._query
-    }
+    return this.query;
+  }
+
+  getNextId() {
+    this.query = `SELECT nextval('posts_id_seq') as id`;
+
+    return this.dataBase.one(this.query);
   }
 
   updateForums(size, forum) {
-    this._query = `UPDATE forums SET posts = posts + ${size} 
+    this.query = `UPDATE forums SET posts = posts + ${size} 
     WHERE lower(slug) = lower('${forum}')`;
 
-    return this._dataBase.none(this._query);
+    return this.dataBase.none(this.query);
   }
 }
 

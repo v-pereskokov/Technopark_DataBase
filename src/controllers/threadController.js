@@ -9,78 +9,19 @@ class ThreadController {
 
       try {
         const thread = await threadService.findThreadById(slugOrId);
-        const id = await postService.dataBase.one(`SELECT nextval('posts_id_seq') as id`);
-        const data = postService.getCreateBatch({
-          postId: +id.id,
-          author: body[0].author,
-          created: new Date().toISOString(),
-          forum: thread.forum,
-          isEdited: body[0].is_edited ? body[0].is_edited : 'FALSE',
-          message: body[0].message,
-          parent: body[0].parent,
-          threadId: thread.id
-        });
 
-        console.log(data.query);
-
-        // const result = await data.dataBase.tx(async (transaction) => {
-        //   const queries = [];
-        //
-        //   for (let post of body) {
-        //     try {
-        //       console.log(+id.id);
-        //       console.log(post.author);
-        //       console.log(new Date().toISOString());
-        //       console.log(thread.forum);
-        //       console.log(post.is_edited ? post.is_edited : false);
-        //       console.log(post.message);
-        //       console.log(post.parent);
-        //       console.log(post.parent);
-        //       console.log(+id.id);
-        //       console.log(thread.id);
-        //
-        //       queries.push(transaction.none(data.query, [
-        //         +id.nextval,
-        //         post.author,
-        //         new Date().toISOString(),
-        //         thread.forum,
-        //         post.is_edited ? post.is_edited : false,
-        //         post.message,
-        //         post.parent,
-        //         post.parent,
-        //         +id.nextval,
-        //         thread.id
-        //       ]));
-        //     } catch(e) {
-        //       console.log(e);
-        //     }
-        //   }
-        //
-        //   return await transaction.batch(queries);
-        // });
-
+        const result = await postService.createAsBatch(body, thread);
         await postService.updateForums(body.length, thread.forum);
-        const result = await postService.dataBase.any(data.query);
 
+        for (let post of result[0]) {
+          Object.assign(post, {
+            thread: +post.thread_id,
+            id: +post.id
+          })
+        }
         console.log(result);
-        console.log('\n');
-        console.log([{
-          author: result[0].author,
-          created: result[0].created,
-          thread: result[0].thread,
-          forum: result[0].forum,
-          message: result[0].message,
-          id: +result[0].id
-        }]);
 
-        ctx.body = [{
-          author: result[0].author,
-          created: result[0].created,
-          thread: +result[0].thread_id,
-          forum: result[0].forum,
-          message: result[0].message,
-          id: +result[0].id
-        }];
+        ctx.body = result[0];
         ctx.status = 201;
 
         resolve();
