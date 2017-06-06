@@ -8,7 +8,8 @@ class ThreadController {
       const slugOrId = ctx.params.slug_or_id;
 
       try {
-        const thread = await threadService.findThreadById(slugOrId);
+        const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+        await threadService.findThreadBySlug(slugOrId);
 
         const result = await postService.createAsBatch(body, thread);
         await postService.updateForums(body.length, thread.forum);
@@ -19,7 +20,6 @@ class ThreadController {
             id: +post.id
           })
         }
-        console.log(result);
 
         ctx.body = result[0];
         ctx.status = 201;
