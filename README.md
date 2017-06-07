@@ -4,8 +4,7 @@
 
 ## Api
 
-Документацию можно читать как собственно в файле swagger.yml, так и через Swagger UI 
-(там же есть возможность поиграться с запросами): [API](https://tech-db-forum.bozaro.ru/)
+Documentation: [API](swagger.yml)
 
 ## Install
 
