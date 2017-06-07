@@ -137,6 +137,36 @@ class ForumController {
       resolve();
     });
   }
+
+  getUsers(ctx, next) {
+    return new Promise(async (resolve, reject) => {
+      const desc = ctx.query.desc ? ctx.query.desc : 'false';
+      const limit = ctx.query.limit ? +ctx.query.limit : 100;
+      const since = ctx.query.since;
+      const slug = ctx.params.slug;
+
+      try {
+        const id = await forumService.getId(slug);
+
+        ctx.body = await userService.getForumMembers({
+          id: +id.id,
+          limit,
+          since,
+          desc
+        });
+        ctx.status = 200;
+
+        resolve();
+      } catch(e) {
+        console.log(e);
+
+        ctx.body = e;
+        ctx.status = 404;
+
+        resolve();
+      }
+    });
+  }
 }
 
 const forumController = new ForumController();

@@ -63,7 +63,7 @@ class PostService extends BaseService {
     ORDER BY p.id ${desc === 'true' ? 'DESC' : 'ASC'} 
     LIMIT ${limit} OFFSET ${offset}`;
 
-    return this.dataBase.many(this.query);
+    return this.dataBase.manyOrNone(this.query);
   }
 
   getPostsTreeSort(id, desc, limit, offset) {
@@ -73,7 +73,7 @@ class PostService extends BaseService {
     ORDER BY p.path ${desc === 'true' ? 'DESC' : 'ASC'} 
     LIMIT ${limit} OFFSET ${offset}`;
 
-    return this.dataBase.many(this.query);
+    return this.dataBase.manyOrNone(this.query);
   }
 
   getPostsParentTreeSort(id, desc, limit, offset) {
@@ -88,7 +88,7 @@ class PostService extends BaseService {
     JOIN sub ON sub.path <@ p.path 
     ORDER BY p.path ${desc === 'true' ? 'DESC' : 'ASC'}`;
 
-    return this.dataBase.many(this.query);
+    return this.dataBase.manyOrNone(this.query);
   }
 }
 

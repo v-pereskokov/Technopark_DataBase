@@ -7,6 +7,6 @@ forumRouter.post('/api/forum/create', forumController.create);
 forumRouter.get('/api/forum/:slug/details', forumController.get);
 forumRouter.post('/api/forum/:slug/create', forumController.createThread);
 forumRouter.get('/api/forum/:slug/threads', forumController.getThreads);
-// forumRouter.get('/api/forum/:slug/users', forumController.getUsers);
+forumRouter.get('/api/forum/:slug/users', forumController.getUsers);
 
 export default forumRouter;

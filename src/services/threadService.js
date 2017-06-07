@@ -1,5 +1,4 @@
 import BaseService from './baseService';
-import forumService from './forumService';
 
 class ThreadService extends BaseService {
   constructor() {

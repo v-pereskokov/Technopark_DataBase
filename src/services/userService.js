@@ -46,6 +46,25 @@ class UserService extends BaseService {
 
     return this.dataBase.one(this.query);
   }
+
+  getForumMembers(data) {
+    this.query = `SELECT u.id, u.nickname, u.email, u.fullname, u.about 
+    FROM users u 
+    WHERE u.id IN (
+    SELECT fm.userId 
+    FROM forumMembers fm 
+    WHERE fm.forumId = ${data.id})`;
+
+    if (data.since) {
+      this.query += ` AND lower(u.nickname) ${data.desc === 'true' ? '<' : '>'} 
+      LOWER('${data.since}')`
+    }
+
+    this.query += ` ORDER BY LOWER(u.nickname) ${data.desc === 'true' ? 'DESC' : 'ASC'} 
+    LIMIT ${data.limit}`;
+
+    return this.dataBase.manyOrNone(this.query);
+  }
 }
 
 const userService = new UserService();

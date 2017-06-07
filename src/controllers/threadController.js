@@ -119,7 +119,7 @@ class ThreadController {
             id: +post.id,
             thread: +post.threadid,
             parent: post.parent ? +post.parent : null
-          }))
+          }));
         }
 
         ctx.body = {
@@ -130,16 +130,8 @@ class ThreadController {
 
         resolve();
       } catch(e) {
-        if (e.message.indexOf('No data returned') !== -1) {
-          ctx.body = {
-            marker: `${marker}`,
-            posts: []
-          };
-          ctx.status = 200;
-        } else {
-          ctx.body = '';
-          ctx.status = 404;
-        }
+        ctx.body = '';
+        ctx.status = 404;
 
         resolve();
       }
@@ -162,8 +154,8 @@ class ThreadController {
         });
         ctx.status = 200;
 
-        resolve()
-      } catch(e) {
+        resolve();
+      } catch (e) {
         ctx.body = '';
         ctx.status = 404;
 
