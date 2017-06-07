@@ -145,6 +145,32 @@ class ThreadController {
       }
     });
   }
+
+  updateThread(ctx, next) {
+    return new Promise(async (resolve, reject) => {
+      const slugOrId = ctx.params.slug_or_id;
+      const body = ctx.request.body;
+
+      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+        await threadService.findThreadBySlug(slugOrId);
+
+      try {
+        await threadService.updateThread(thread, ctx.request.body);
+
+        ctx.body = Object.assign(thread, body, {
+          id: +thread.id
+        });
+        ctx.status = 200;
+
+        resolve()
+      } catch(e) {
+        ctx.body = '';
+        ctx.status = 404;
+
+        resolve();
+      }
+    });
+  }
 }
 
 const threadController = new ThreadController();

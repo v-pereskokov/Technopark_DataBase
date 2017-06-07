@@ -59,8 +59,8 @@ class ForumController {
       const title = ctx.request.body.title;
       const message = ctx.request.body.message;
 
-      let forum = ctx.request.body.forum;
-      let slug = !isEmpty(ctx.request.body.slug) ? ctx.request.body.slug :
+      const forum = ctx.request.body.forum;
+      const slug = !isEmpty(ctx.request.body.slug) ? ctx.request.body.slug :
         ctx.params.slug;
 
       try {
@@ -72,6 +72,8 @@ class ForumController {
           message,
           title
         });
+
+        await forumService.updateForums(forum);
 
         ctx.body = Object.assign(result, {
           id: +result.id,

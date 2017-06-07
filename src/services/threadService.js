@@ -1,4 +1,5 @@
 import BaseService from './baseService';
+import forumService from './forumService';
 
 class ThreadService extends BaseService {
   constructor() {
@@ -69,6 +70,16 @@ class ThreadService extends BaseService {
     WHERE t.id = ${id}`;
 
     return this.dataBase.one(this.query);
+  }
+
+  updateThread(thread, request) {
+    this.query = `UPDATE threads 
+    SET 
+    message = '${request.message ? request.message : thread.message}', 
+    title = '${request.title ? request.title : thread.title}' 
+    WHERE id = ${+thread.id}`;
+
+    return this.dataBase.none(this.query);
   }
 }
 
