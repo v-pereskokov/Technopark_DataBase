@@ -5,7 +5,7 @@ class PostService extends BaseService {
     super();
   }
 
-  createAsBatch(posts, thread) {
+  createAsBatch(posts, thread, date) {
     return this.dataBase.tx(async (transaction) => {
       const queries = [];
 

@@ -14,14 +14,18 @@ class ThreadController {
         const result = await postService.createAsBatch(body, thread);
         await postService.updateForums(body.length, thread.forum);
 
-        for (let post of result[0]) {
-          Object.assign(post, {
-            thread: +post.thread_id,
-            id: +post.id
-          })
+        const returned = [];
+
+        for (let post of result) {
+          for (let postDetails of post) {
+            returned.push(Object.assign(postDetails, {
+              thread: +postDetails.thread_id,
+              id: +postDetails.id
+            }));
+          }
         }
 
-        ctx.body = result[0];
+        ctx.body = returned;
         ctx.status = 201;
 
         resolve();
@@ -52,9 +56,31 @@ class ThreadController {
 
         resolve();
       } catch(e) {
-        console.log(e);
+        ctx.body = 'Except';
+        ctx.status = 404;
+
+        resolve();
+      }
+    });
+  }
+
+  getThread(ctx, next) {
+    return new Promise(async (resolve, reject) => {
+      const slugOrId = ctx.params.slug_or_id;
+
+      try {
+        const result = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+          await threadService.findThreadBySlug(slugOrId);
+
+        ctx.body = Object.assign(result, {
+          id: +result.id
+        });
+        ctx.status = 200;
+
+        resolve();
+      } catch(e) {
         ctx.body = '';
-        ctx.status = 500;
+        ctx.status = 404;
 
         resolve();
       }

@@ -82,7 +82,7 @@ CREATE UNIQUE INDEX index_threads_on_slug
 CREATE TABLE IF NOT EXISTS posts (
   id        BIGSERIAL PRIMARY KEY,
   author TEXT NOT NULL ,
-  created   TIMESTAMPTZ                    NOT NULL,
+  created   TIMESTAMP WITH TIME ZONE DEFAULT current_timestamp,
   forum TEXT NOT NULL ,
   is_edited BOOLEAN DEFAULT FALSE,
   message   TEXT,
