@@ -84,9 +84,9 @@ class ThreadController {
   getPosts(ctx, next) {
     return new Promise(async (resolve, reject) => {
       const slugOrId = ctx.params.slug_or_id;
-      const desc = ctx.query.desc;
-      const limit = ctx.query.limit;
-      const sort = ctx.query.sort;
+      const desc = ctx.query.desc ? ctx.query.desc : 'false';
+      const limit = ctx.query.limit ? +ctx.query.limit : 100;
+      const sort = ctx.query.sort ? ctx.query.sort : 'flat';
       let marker = ctx.query.marker ? +ctx.query.marker : 0;
 
       const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
