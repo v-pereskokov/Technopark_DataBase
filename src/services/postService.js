@@ -5,7 +5,9 @@ class PostService extends BaseService {
     super();
   }
 
-  createAsBatch(posts, thread, date) {
+  createAsBatch(posts, thread) {
+    const date = new Date().toISOString();
+
     return this.dataBase.tx(async (transaction) => {
       const queries = [];
 
@@ -15,7 +17,7 @@ class PostService extends BaseService {
         queries.push(transaction.any(this.getCreateBatchQuery({
           postId: +id.id,
           author: post.author,
-          created: new Date().toISOString(),
+          created: date,
           forum: thread.forum,
           isEdited: post.is_edited ? post.is_edited : 'FALSE',
           message: post.message,

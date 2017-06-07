@@ -19,6 +19,7 @@ class ThreadController {
         for (let post of result) {
           for (let postDetails of post) {
             returned.push(Object.assign(postDetails, {
+              parent: +postDetails.parent,
               thread: +postDetails.threadid,
               id: +postDetails.id
             }));
