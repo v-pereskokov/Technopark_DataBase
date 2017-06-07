@@ -30,6 +30,9 @@ Containers start:
 
 ```
 docker build -t [USERNAME] https://github.com/username/rep.git
+```
+
+```
 docker run -p 5000:5000 --name [CONTAINER_NAME] -t [USERNAME]
 ```
 
@@ -58,14 +61,12 @@ Key                                   | Description
 
 ```
 ./test_program fill --url=http://localhost:5000/api
-
 ```
 
 #### Testing
 
 ```
 ./test_program perf --url=http://localhost:5000/api
-
 ```
 
 ## Development stack
