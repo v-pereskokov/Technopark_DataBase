@@ -1,22 +1,22 @@
-DROP INDEX IF EXISTS index_users_on_email;
-DROP INDEX IF EXISTS index_users_on_nickname;
-DROP INDEX IF EXISTS index_forum_on_slug;
-DROP INDEX IF EXISTS index_threads_on_author_id;
-DROP INDEX IF EXISTS index_threads_on_forum_id;
-DROP INDEX IF EXISTS index_threads_on_slug;
-DROP INDEX IF EXISTS index_posts_on_author_id;
-DROP INDEX IF EXISTS index_posts_on_forum_id;
-DROP INDEX IF EXISTS index_posts_on_parent;
-DROP INDEX IF EXISTS index_posts_on_thread_id;
-DROP INDEX IF EXISTS index_posts_on_path;
-DROP INDEX IF EXISTS index_votes_on_user_id_and_thread_id;
-DROP INDEX IF EXISTS index_forum_members_on_user_id;
+DROP INDEX IF EXISTS indexUsersOnEmail;
+DROP INDEX IF EXISTS indexUsersOnNickname;
+DROP INDEX IF EXISTS indexForumOnSlug;
+DROP INDEX IF EXISTS indexThreadsOnAuthorId;
+DROP INDEX IF EXISTS indexThreadsOnForumId;
+DROP INDEX IF EXISTS indexThreadsOnSlug;
+DROP INDEX IF EXISTS indexPostsOnAuthorId;
+DROP INDEX IF EXISTS indexPostsOnForumId;
+DROP INDEX IF EXISTS indexPostsOnParent;
+DROP INDEX IF EXISTS indexPostsOnThreadId;
+DROP INDEX IF EXISTS indexPostsOnPath;
+DROP INDEX IF EXISTS indexVotesOnUserIdAndThreadId;
+DROP INDEX IF EXISTS indexForumMembersOnUserId;
 
-DROP TRIGGER IF EXISTS on_vote_update ON votes;
-DROP TRIGGER IF EXISTS on_vote_insert ON votes;
+DROP TRIGGER IF EXISTS onVoteUpdate ON votes;
+DROP TRIGGER IF EXISTS onVoteInsert ON votes;
 
-DROP FUNCTION IF EXISTS vote_insert();
-DROP FUNCTION IF EXISTS vote_update();
+DROP FUNCTION IF EXISTS voteInsert();
+DROP FUNCTION IF EXISTS voteUpdate();
 
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS forums CASCADE;
@@ -35,6 +35,11 @@ CREATE TABLE IF NOT EXISTS users (
   about    TEXT
 );
 
+
+CREATE UNIQUE INDEX indexUsersOnNickname ON users (LOWER(nickname));
+CREATE UNIQUE INDEX indexUsersOnEmail ON users (LOWER(email));
+
+
 CREATE TABLE IF NOT EXISTS forums (
   id      BIGSERIAL     PRIMARY KEY,
   posts   INT           NOT NULL DEFAULT 0,
@@ -43,6 +48,11 @@ CREATE TABLE IF NOT EXISTS forums (
   title   TEXT          NOT NULL,
   "user"  TEXT          NOT NULL
 );
+
+
+CREATE UNIQUE INDEX indexForumOnSlug ON forums (LOWER(slug));
+CREATE INDEX indexForumonUser ON forums (lower("user"));
+
 
 CREATE TABLE IF NOT EXISTS threads (
   id        BIGSERIAL   PRIMARY KEY,
@@ -54,6 +64,11 @@ CREATE TABLE IF NOT EXISTS threads (
   title     TEXT        NOT NULL,
   votes     INT         NOT NULL DEFAULT 0
 );
+
+
+CREATE INDEX indexThreadsOnForum ON threads (lower(forum));
+CREATE UNIQUE INDEX indexThreadsOnSlug ON threads (LOWER(slug));
+
 
 CREATE TABLE IF NOT EXISTS posts (
   id        BIGSERIAL   PRIMARY KEY,
@@ -67,41 +82,26 @@ CREATE TABLE IF NOT EXISTS posts (
   threadId BIGINT REFERENCES threads (id) NOT NULL
 );
 
+
+CREATE INDEX indexPostsOnPath ON posts USING GIN (path);
+CREATE INDEX indexPostsOnThreadIdAndId ON posts(threadId, id);
+CREATE INDEX indexPostsOnParent ON posts (parent);
+CREATE INDEX indexPostsOnThreadId ON posts (threadId);
+CREATE INDEX indexPostsThreadPathParent ON posts(threadId, parent, path);
+CREATE INDEX indexPostsOnThreadIdAndPathAndId ON posts (threadId, path ,id);
+
+
 CREATE TABLE IF NOT EXISTS votes (
   userId   BIGINT REFERENCES users (id)   NOT NULL,
   threadId BIGINT REFERENCES threads (id) NOT NULL,
-  voice     INT                            NOT NULL
+  voice     INT                           NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS forumMembers (
-  user_id  BIGINT REFERENCES users (id),
-  forum_id BIGINT REFERENCES forums (id)
-);
 
-CREATE UNIQUE INDEX index_users_on_nickname ON users (LOWER(nickname));
-CREATE UNIQUE INDEX index_users_on_email ON users (LOWER(email));
+CREATE UNIQUE INDEX indexVotesOnUserIdAndThreadId ON votes (userId, threadId);
 
-CREATE UNIQUE INDEX index_forum_on_slug ON forums (LOWER(slug));
 
-CREATE INDEX index_forum_on_user ON forums (lower("user"));
-
-CREATE INDEX index_threads_on_forum ON threads (lower(forum));
-CREATE UNIQUE INDEX index_threads_on_slug ON threads (LOWER(slug));
-
-CREATE INDEX index_posts_on_path ON posts USING GIN (path);
-CREATE INDEX index_posts_on_thread_id_and_id ON posts(threadId, id);
-CREATE INDEX index_posts_on_parent ON posts (parent);
-CREATE INDEX index_posts_on_thread_id ON posts (threadId);
-CREATE INDEX index_posts_thread_path_parent ON posts(threadId, parent, path);
-CREATE INDEX index_posts_on_thread_id_and_path_and_id ON posts (threadId, path ,id);
-
-CREATE UNIQUE INDEX index_votes_on_user_id_and_thread_id ON votes (userId, threadId);
-
-CREATE INDEX index_forumMembers_on_user_id ON forum_members(userId);
-CREATE INDEX index_forumMembers_on_forum_id ON forum_members(forumId);
-CREATE INDEX index_forumMembers_on_user_id_forum_id ON forum_members (userId, forumId);
-
-CREATE FUNCTION vote_insert()
+CREATE FUNCTION voteInsert()
   RETURNS TRIGGER AS '
 BEGIN
   UPDATE threads
@@ -112,11 +112,12 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE TRIGGER on_vote_insert
+CREATE TRIGGER onVoteInsert
 AFTER INSERT ON votes
-FOR EACH ROW EXECUTE PROCEDURE vote_insert();
+FOR EACH ROW EXECUTE PROCEDURE voteInsert();
 
-CREATE FUNCTION vote_update()
+
+CREATE FUNCTION voteUpdate()
   RETURNS TRIGGER AS '
 BEGIN
 
@@ -135,23 +136,37 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE TRIGGER on_vote_update
+CREATE TRIGGER onVoteUpdate
 AFTER UPDATE ON votes
-FOR EACH ROW EXECUTE PROCEDURE vote_update();
+FOR EACH ROW EXECUTE PROCEDURE voteUpdate();
 
-CREATE OR REPLACE FUNCTION forum_members_update()
+
+CREATE TABLE IF NOT EXISTS forumMembers (
+  userId  BIGINT REFERENCES users (id),
+  forumId BIGINT REFERENCES forums (id)
+);
+
+
+CREATE INDEX indexForumMembersOnUserId ON forumMembers (userId);
+CREATE INDEX indexForumMembersOnForumId ON forumMembers (forumId);
+CREATE INDEX indexForumMembersOnUserIdForumId ON forumMembers (userId, forumId);
+
+
+CREATE OR REPLACE FUNCTION forumMembersUpdate()
   RETURNS TRIGGER AS '
 BEGIN
-  INSERT INTO forum_members (userId, forumId) VALUES ((SELECT id FROM users WHERE lower(NEW.author) = lower(nickname)),
-                                                        (SELECT id FROM forums WHERE lower(NEW.forum) = lower(slug)));
+  INSERT INTO forumMembers (userId, forumId) VALUES ((SELECT id FROM users WHERE LOWER(NEW.author) = LOWER(nickname)),
+                                                        (SELECT id FROM forums WHERE LOWER(NEW.forum) = LOWER(slug)));
   RETURN NULL;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE TRIGGER on_post_insert
-AFTER INSERT ON posts
-FOR EACH ROW EXECUTE PROCEDURE forum_members_update();
 
-CREATE TRIGGER on_thread_insert
+CREATE TRIGGER onPostInsert
+AFTER INSERT ON posts
+FOR EACH ROW EXECUTE PROCEDURE forumMembersUpdate();
+
+
+CREATE TRIGGER onThreadInsert
 AFTER INSERT ON threads
-FOR EACH ROW EXECUTE PROCEDURE forum_members_update();
+FOR EACH ROW EXECUTE PROCEDURE forumMembersUpdate();
