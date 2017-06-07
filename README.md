@@ -4,7 +4,7 @@
 
 ## Api
 
-Documentation: [API](swagger.yml)
+[Documentation](swagger.yml)
 
 ## Install
 
