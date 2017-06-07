@@ -130,10 +130,11 @@ class ThreadController {
 
         resolve();
       } catch(e) {
-        console.log(e);
-
         if (e.message.indexOf('No data returned') !== -1) {
-          ctx.body = [];
+          ctx.body = {
+            marker: `${marker}`,
+            posts: []
+          };
           ctx.status = 200;
         } else {
           ctx.body = '';
