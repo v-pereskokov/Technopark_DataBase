@@ -90,6 +90,15 @@ class PostService extends BaseService {
 
     return this.dataBase.manyOrNone(this.query);
   }
+
+  getPostById(id) {
+    this.query = `SELECT p.id, p.forum, p.author, p.message, p.threadId, 
+    p.parent, p.created, p.is_edited 
+    FROM posts p 
+    WHERE p.id = ${id}`;
+
+    return this.dataBase.one(this.query);
+  }
 }
 
 const postService = new PostService();
