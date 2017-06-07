@@ -132,8 +132,13 @@ class ThreadController {
       } catch(e) {
         console.log(e);
 
-        ctx.body = e;
-        ctx.status = 404;
+        if (e.message.indexOf('No data returned') !== -1) {
+          ctx.body = [];
+          ctx.status = 200;
+        } else {
+          ctx.body = '';
+          ctx.status = 404;
+        }
 
         resolve();
       }
