@@ -55,6 +55,41 @@ class PostService extends BaseService {
 
     return this.dataBase.none(this.query);
   }
+
+  getPostsFlatSort(id, desc, limit, offset) {
+    this.query = `SELECT p.id, p.author, p.forum, p.created, p.message, p.threadId, p.parent, p.is_edited 
+    FROM posts p 
+    WHERE p.threadId = ${id} 
+    ORDER BY p.id ${desc === 'true' ? 'DESC' : 'ASC'} 
+    LIMIT ${limit} OFFSET ${offset}`;
+
+    return this.dataBase.many(this.query);
+  }
+
+  getPostsTreeSort(id, desc, limit, offset) {
+    this.query = `SELECT p.id, p.author, p.forum, p.created, p.message, p.threadId, p.parent, p.is_edited 
+    FROM posts p 
+    WHERE p.threadId = ${id} 
+    ORDER BY p.path ${desc === 'true' ? 'DESC' : 'ASC'} 
+    LIMIT ${limit} OFFSET ${offset}`;
+
+    return this.dataBase.many(this.query);
+  }
+
+  getPostsParentTreeSort(id, desc, limit, offset) {
+    this.query = `WITH sub AS (
+    SELECT path FROM posts 
+    WHERE parent IS NULL AND threadId = ${id} 
+    ORDER BY path ${desc === 'true' ? 'DESC' : 'ASC'} 
+    LIMIT ${limit} OFFSET ${offset} 
+    ) 
+    SELECT p.id, p.author, p.forum, p.created, p.message, p.threadId, p.parent, p.is_edited 
+    FROM posts p 
+    JOIN sub ON sub.path <@ p.path 
+    ORDER BY p.path ${desc === 'true' ? 'DESC' : 'ASC'}`;
+
+    return this.dataBase.many(this.query);
+  }
 }
 
 const postService = new PostService();
