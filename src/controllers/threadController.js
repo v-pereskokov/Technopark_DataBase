@@ -9,7 +9,7 @@ class ThreadController {
 
       try {
         const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-        await threadService.findThreadBySlug(slugOrId);
+          await threadService.findThreadBySlug(slugOrId);
 
         const result = await postService.createAsBatch(body, thread);
         await postService.updateForums(body.length, thread.forum);
@@ -19,7 +19,7 @@ class ThreadController {
         for (let post of result) {
           for (let postDetails of post) {
             returned.push(Object.assign(postDetails, {
-              thread: +postDetails.thread_id,
+              thread: +postDetails.threadid,
               id: +postDetails.id
             }));
           }
@@ -42,25 +42,18 @@ class ThreadController {
       const slugOrId = ctx.params.slug_or_id;
       const body = ctx.request.body;
 
-      try {
-        const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-          await threadService.findThreadBySlug(slugOrId);
+      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+        await threadService.findThreadBySlug(slugOrId);
+      await threadService.addVote(body, thread);
 
-        await threadService.addVote(body, thread);
-        const votes = await threadService.getVotes(thread.id);
+      const votes = await threadService.getVotes(thread.id);
 
-        ctx.body = Object.assign(thread, votes, {
-          id: +thread.id
-        });
-        ctx.status = 200;
+      ctx.body = Object.assign(thread, votes, {
+        id: +thread.id
+      });
+      ctx.status = 200;
 
-        resolve();
-      } catch(e) {
-        ctx.body = 'Except';
-        ctx.status = 404;
-
-        resolve();
-      }
+      resolve();
     });
   }
 
@@ -78,7 +71,7 @@ class ThreadController {
         ctx.status = 200;
 
         resolve();
-      } catch(e) {
+      } catch (e) {
         ctx.body = '';
         ctx.status = 404;
 

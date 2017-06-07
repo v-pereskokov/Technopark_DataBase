@@ -30,7 +30,7 @@ class PostService extends BaseService {
 
   getCreateBatchQuery(data) {
     this.query = `INSERT INTO posts 
-    (id, author, created, forum, is_edited, message, parent, path, thread_id) 
+    (id, author, created, forum, is_edited, message, parent, path, threadId) 
     VALUES (${data.postId}, (SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower('${data.author}')), 
     '${data.created}'::TIMESTAMPTZ, 
     (SELECT f.slug FROM forums f WHERE lower(f.slug) = lower('${data.forum}')), 

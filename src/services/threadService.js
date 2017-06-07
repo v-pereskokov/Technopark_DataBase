@@ -56,9 +56,9 @@ class ThreadService extends BaseService {
   }
 
   addVote(data, thread) {
-    this.query = `INSERT INTO votes (user_id, thread_id, voice) VALUES 
-    ((SELECT u.id FROM users u WHERE lower(nickname) = lower('${data.nickname}')), ${thread.id}, ${data.voice}) 
-    ON CONFLICT (user_id, thread_id) DO 
+    this.query = `INSERT INTO votes (userId, threadId, voice) VALUES 
+    ((SELECT u.id FROM users u WHERE LOWER(nickname) = LOWER('${data.nickname}')), ${thread.id}, ${data.voice}) 
+    ON CONFLICT (userId, threadId) DO 
     UPDATE SET voice = ${data.voice}`;
 
     return this.dataBase.none(this.query);

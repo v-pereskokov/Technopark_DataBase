@@ -73,16 +73,11 @@ class ForumController {
           title
         });
 
-        ctx.body = {
+        ctx.body = Object.assign(result, {
           id: +result.id,
-          author: result.author,
-          created: result.created,
-          forum: result.forum,
-          message: result.message,
           slug: result.slug === result.forum ? '' : result.slug,
-          title: result.title,
           votes: +result.votes
-        };
+        });
         ctx.status = 201;
 
         resolve();
@@ -118,16 +113,10 @@ class ForumController {
 
         if (result) {
           for (let thread of result) {
-            top.push({
+            top.push(Object.assign(thread, {
               id: +thread.id,
-              slug: thread.slug,
-              author: thread.author,
-              forum: thread.forum,
-              created: thread.created,
-              message: thread.message,
-              title: thread.title,
               votes: +thread.votes
-            });
+            }));
           }
         }
 
