@@ -67,18 +67,25 @@ class ThreadController {
       const slugOrId = ctx.params.slug_or_id;
       const body = ctx.request.body;
 
-      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-        await threadService.findThreadBySlug(slugOrId);
-      await threadService.addVote(body, thread);
+      try {
+        const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+          await threadService.findThreadBySlug(slugOrId);
+        await threadService.addVote(body, thread);
 
-      const votes = await threadService.getVotes(thread.id);
+        const votes = await threadService.getVotes(thread.id);
 
-      ctx.body = Object.assign(thread, votes, {
-        id: +thread.id
-      });
-      ctx.status = 200;
+        ctx.body = Object.assign(thread, votes, {
+          id: +thread.id
+        });
+        ctx.status = 200;
 
-      resolve();
+        resolve();
+      } catch(e) {
+        ctx.body = '';
+        ctx.status = 404;
+
+        resolve();
+      }
     });
   }
 
@@ -113,12 +120,12 @@ class ThreadController {
       const sort = ctx.query.sort ? ctx.query.sort : 'flat';
       let marker = ctx.query.marker ? +ctx.query.marker : 0;
 
-      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-        await threadService.findThreadBySlug(slugOrId);
-
-      let posts = [];
-
       try {
+        const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+          await threadService.findThreadBySlug(slugOrId);
+
+        let posts = [];
+
         switch (sort) {
           case 'flat':
             posts = await postService.getPostsFlatSort(+thread.id, desc, limit, marker);
