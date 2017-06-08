@@ -97,7 +97,7 @@ class PostService extends BaseService {
     FROM posts p 
     WHERE p.id = ${id}`;
 
-    return this.dataBase.one(this.query);
+    return this.dataBase.oneOrNone(this.query);
   }
 
   updatePost(post) {
