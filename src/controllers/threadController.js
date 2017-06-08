@@ -1,5 +1,6 @@
 import postService from '../services/postService';
 import threadService from '../services/threadService';
+import getObjectFromArray from '../tools/getObjectFromArray';
 
 class ThreadController {
   create(ctx, next) {
@@ -13,9 +14,11 @@ class ThreadController {
 
         const posts = [];
 
+        const getPosts = await postService.getPosts(+thread.id);
+
         for (let post of body) {
           if (post.parent && +post.parent !== 0) {
-            const parentPost = await postService.getPostById(+post.parent);
+            const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
 
             if (!parentPost || +parentPost.threadid !== +thread.id) {
               ctx.body = '';

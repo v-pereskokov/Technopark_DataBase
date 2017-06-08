@@ -7,15 +7,14 @@ class UserController {
       body['nickname'] = ctx.params.nickname;
 
       try {
-        ctx.body = await userService.getUser(body.nickname, body.email);
-        ctx.status = 409;
+        await userService.create(body);
+        ctx.body = body;
+        ctx.status = 201;
 
         resolve();
       } catch(e) {
-        await userService.create(body);
-
-        ctx.body = body;
-        ctx.status = 201;
+        ctx.body = await userService.getUser(body.nickname, body.email);
+        ctx.status = 409;
 
         resolve();
       }
