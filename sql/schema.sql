@@ -58,23 +58,23 @@ CREATE TABLE IF NOT EXISTS threads (
   id        BIGSERIAL   PRIMARY KEY,
   author    TEXT        NOT NULL,
   created   TIMESTAMPTZ NOT NULL,
-  forum     TEXT        NOT NULL ,
+  forum     TEXT        NOT NULL,
   message   TEXT        NOT NULL,
-  slug      TEXT        UNIQUE,
+  slug      TEXT,
   title     TEXT        NOT NULL,
   votes     INT         NOT NULL DEFAULT 0
 );
 
 
 CREATE INDEX indexThreadsOnForum ON threads (lower(forum));
-CREATE UNIQUE INDEX indexThreadsOnSlug ON threads (LOWER(slug));
+CREATE INDEX indexThreadsOnSlug ON threads (LOWER(slug));
 
 
 CREATE TABLE IF NOT EXISTS posts (
   id        BIGSERIAL   PRIMARY KEY,
   author    TEXT        NOT NULL,
   created   TIMESTAMP   NOT NULL,
-  forum     TEXT        NOT NULL ,
+  forum     TEXT        NOT NULL,
   isEdited BOOLEAN     DEFAULT FALSE,
   message   TEXT,
   parent    BIGINT,
