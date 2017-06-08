@@ -30,7 +30,7 @@ class UserController {
 
         resolve();
       } catch(e) {
-        ctx.body = 'Not Found!';
+        ctx.body = '';
         ctx.status = 404;
 
         resolve();

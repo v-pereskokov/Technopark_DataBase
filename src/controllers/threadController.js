@@ -14,9 +14,6 @@ class ThreadController {
         const posts = [];
 
         for (let post of body) {
-          console.log('\n');
-          console.log(post);
-          console.log(thread);
           if (post.parent && +post.parent !== 0) {
             const parentPost = await postService.getPostById(+post.parent);
 
@@ -58,9 +55,7 @@ class ThreadController {
 
         resolve();
       } catch (e) {
-        console.log(e);
-
-        ctx.body = e;
+        ctx.body = '';
         ctx.status = 404;
         resolve();
       }

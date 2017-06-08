@@ -20,7 +20,7 @@ class ForumController {
       } catch (e) {
         switch (+e.code) {
           case 23502:
-            ctx.body = e;
+            ctx.body = '';
             ctx.status = 404;
             break;
           case 23505:
@@ -44,7 +44,7 @@ class ForumController {
 
         resolve();
       } catch(e) {
-        ctx.body = 'Not Found';
+        ctx.body = '';
         ctx.status = 404;
 
         resolve();
@@ -158,7 +158,7 @@ class ForumController {
 
         resolve();
       } catch(e) {
-        ctx.body = e;
+        ctx.body = '';
         ctx.status = 404;
 
         resolve();
