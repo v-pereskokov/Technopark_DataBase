@@ -84,6 +84,7 @@ class PostController {
 
         resolve();
       } catch(e) {
+        console.log(e);
         ctx.body = '';
         ctx.status = 404;
 

@@ -103,7 +103,7 @@ class PostService extends BaseService {
   updatePost(post) {
     this.query = `UPDATE posts SET 
     message = '${post.message}', 
-    isEdited = ${post.isedited} 
+    isEdited = ${post.isedited ? post.isedited : false} 
     WHERE id = ${post.id}`;
 
     return this.dataBase.none(this.query);
