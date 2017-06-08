@@ -4,21 +4,21 @@
   "description": "Data Base project. Technopark.",
   "main": "index.js",
   "dependencies": {
-    "koa": "^2.0.0-alpha.8",
-    "koa-bodyparser": "^4.2.0",
-    "koa-router": "^7.2.0",
+    "koa": "2.0.0-alpha.8",
+    "koa-bodyparser": "4.2.0",
+    "koa-router": "7.2.0",
     "pg-native": "^1.10.1",
     "pg-promise": "^5.7.1"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-core": "^6.24.1",
-    "babel-loader": "^7.0.0",
-    "babel-plugin-syntax-async-functions": "^6.13.0",
-    "babel-plugin-transform-regenerator": "^6.24.1",
-    "babel-polyfill": "^6.23.0",
-    "babel-preset-es2015": "^6.24.1",
-    "webpack": "^2.6.1"
+    "babel-loader": "7.0.0",
+    "babel-plugin-syntax-async-functions": "6.13.0",
+    "babel-plugin-transform-regenerator": "6.24.1",
+    "babel-polyfill": "6.23.0",
+    "babel-preset-es2015": "6.24.1",
+    "webpack": "2.6.1"
   },
   "scripts": {
     "webpack-prod": "./node_modules/.bin/webpack --config webpack.config.prod.js",

@@ -25,12 +25,12 @@ class UserController {
   get(ctx, next) {
     return new Promise(async (resolve, reject) => {
       try {
-        ctx.body = await userService.getUserByNickname(ctx.params.nickname);;
+        ctx.body = await userService.getUserByNickname(ctx.params.nickname);
         ctx.status = 200;
 
         resolve();
       } catch(e) {
-        ctx.body = 'Not Found!';
+        ctx.body = '';
         ctx.status = 404;
 
         resolve();
@@ -44,13 +44,18 @@ class UserController {
       body['nickname'] = ctx.params.nickname;
 
       try {
-        const data = await userService.update(body);
-        ctx.body = data;
-        ctx.status = data ? 200 : 404;
+        await userService.update(body);
+
+        ctx.body = await userService.getUserByNickname(body.nickname);
+        ctx.status = 200;
 
         resolve();
       } catch(e) {
         switch (+e.code) {
+          case 23502:
+            ctx.body = '';
+            ctx.status = 404;
+            break;
           case 23505:
             ctx.body = body;
             ctx.status = 409;

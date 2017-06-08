@@ -1,64 +1,45 @@
-import dataBase from '../config';
-// const a = "INSERT INTO forums (slug, title, "user") VALUES " +
-// "(?, ?, (SELECT nickname FROM users WHERE lower(nickname) = lower(?)))";
-class ForumService {
+import BaseService from './baseService';
+
+class ForumService extends BaseService {
   constructor() {
-    this._query = '';
+    super();
   }
 
   create(user) {
-    this._query = `INSERT INTO forums (slug, title, \"user\") VALUES (\'${user.slug}\', \'${user.title}\', (SELECT nickname FROM users WHERE lower(nickname) = lower(\'${user.user}\')));`;
+    this.query = `INSERT INTO forums ("user", slug, title) 
+    VALUES (
+    (SELECT nickname FROM users WHERE LOWER(nickname) = LOWER('${user.user}')),
+    '${user.slug}', 
+    '${user.title}'
+    );`;
 
-    return dataBase.none(this._query);
+    return this.dataBase.none(this.query);
   }
 
   get(slug) {
-    this._query = `SELECT f.id, f.title, f.\"user\", f.slug, f.posts, f.threads 
+    this.query = `SELECT f.id, f.title, f."user", f.slug, f.posts, f.threads 
     FROM forums f 
-    WHERE lower(f.slug) = lower('${slug}');`;
+    WHERE LOWER(f.slug) = LOWER('${slug}');`;
 
-    return dataBase.oneOrNone(this._query);
+    return this.dataBase.one(this.query);
+  }
+
+  updateForums(slug) {
+    this.query = `UPDATE forums SET threads = threads + 1 WHERE LOWER(slug) = LOWER('${slug}')`;
+
+    return this.dataBase.none(this.query);
   }
 
   getSlug(slug) {
-    this._query = `SELECT slug FROM forums WHERE lower(slug) = lower(\'${slug}\');`;
+    this.query = `SELECT slug FROM forums WHERE LOWER(slug) = LOWER('${slug}');`;
 
-    return dataBase.one(this._query);
+    return this.dataBase.one(this.query);
   }
 
   getId(slug) {
-    this._query = `SELECT id FROM forums WHERE lower(slug) = lower(\'${slug}\');`;
+    this.query = `SELECT id FROM forums WHERE LOWER(slug) = LOWER('${slug}');`;
 
-    return dataBase.one(this._query);
-  }
-
-  update(user) {
-    this._query = `UPDATE users SET (fullname, email, about)
-     = ('${user.fullname}', '${user.email}', '${user.about}') 
-    WHERE LOWER(nickname) = LOWER(\'${user.nickname}\') RETURNING *;`;
-
-    console.log(this._query);
-
-    return dataBase.oneOrNone(this._query);
-  }
-
-  getUser(nickname, email) {
-    this._query = `SELECT * FROM users WHERE LOWER(nickname) = LOWER(\'${nickname}\') OR 
-    LOWER(email) = LOWER(\'${email}\');`;
-
-    return dataBase.many(this._query);
-  }
-
-  getUserByNickname(nickname) {
-    this._query = `SELECT * FROM users WHERE LOWER(nickname) = LOWER(\'${nickname}\');`;
-
-    return dataBase.one(this._query);
-  }
-
-  getUserByEmail(email) {
-    this._query = `SELECT * FROM users WHERE LOWER(email) = LOWER(\'${email}\');`;
-
-    return dataBase.none(this._query);
+    return this.dataBase.one(this.query);
   }
 }
 
