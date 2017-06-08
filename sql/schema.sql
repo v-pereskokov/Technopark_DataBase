@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS posts (
   author    TEXT        NOT NULL,
   created   TIMESTAMP   NOT NULL,
   forum     TEXT        NOT NULL ,
-  is_edited BOOLEAN     DEFAULT FALSE,
+  isEdited BOOLEAN     DEFAULT FALSE,
   message   TEXT,
   parent    BIGINT,
   path      BIGINT []   NOT NULL,

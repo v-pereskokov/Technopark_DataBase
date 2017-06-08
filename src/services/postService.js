@@ -19,7 +19,7 @@ class PostService extends BaseService {
           author: post.author,
           created: date,
           forum: thread.forum,
-          isEdited: post.is_edited ? post.is_edited : 'FALSE',
+          isEdited: post.isEdited ? post.isEdited : 'FALSE',
           message: post.message,
           parent: post.parent,
           threadId: thread.id
@@ -32,7 +32,7 @@ class PostService extends BaseService {
 
   getCreateBatchQuery(data) {
     this.query = `INSERT INTO posts 
-    (id, author, created, forum, is_edited, message, parent, path, threadId) 
+    (id, author, created, forum, isEdited, message, parent, path, threadId) 
     VALUES (${data.postId}, (SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower('${data.author}')), 
     '${data.created}'::TIMESTAMPTZ, 
     (SELECT f.slug FROM forums f WHERE lower(f.slug) = lower('${data.forum}')), 
@@ -57,7 +57,7 @@ class PostService extends BaseService {
   }
 
   getPostsFlatSort(id, desc, limit, offset) {
-    this.query = `SELECT p.id, p.author, p.forum, p.created, p.message, p.threadId, p.parent, p.is_edited 
+    this.query = `SELECT p.id, p.author, p.forum, p.created, p.message, p.threadId, p.parent, p.isEdited 
     FROM posts p 
     WHERE p.threadId = ${id} 
     ORDER BY p.id ${desc === 'true' ? 'DESC' : 'ASC'} 
@@ -67,7 +67,7 @@ class PostService extends BaseService {
   }
 
   getPostsTreeSort(id, desc, limit, offset) {
-    this.query = `SELECT p.id, p.author, p.forum, p.created, p.message, p.threadId, p.parent, p.is_edited 
+    this.query = `SELECT p.id, p.author, p.forum, p.created, p.message, p.threadId, p.parent, p.isEdited 
     FROM posts p 
     WHERE p.threadId = ${id} 
     ORDER BY p.path ${desc === 'true' ? 'DESC' : 'ASC'} 
@@ -83,7 +83,7 @@ class PostService extends BaseService {
     ORDER BY path ${desc === 'true' ? 'DESC' : 'ASC'} 
     LIMIT ${limit} OFFSET ${offset} 
     ) 
-    SELECT p.id, p.author, p.forum, p.created, p.message, p.threadId, p.parent, p.is_edited 
+    SELECT p.id, p.author, p.forum, p.created, p.message, p.threadId, p.parent, p.isEdited 
     FROM posts p 
     JOIN sub ON sub.path <@ p.path 
     ORDER BY p.path ${desc === 'true' ? 'DESC' : 'ASC'}`;
@@ -93,11 +93,20 @@ class PostService extends BaseService {
 
   getPostById(id) {
     this.query = `SELECT p.id, p.forum, p.author, p.message, p.threadId, 
-    p.parent, p.created, p.is_edited 
+    p.parent, p.created, p.isEdited 
     FROM posts p 
     WHERE p.id = ${id}`;
 
     return this.dataBase.one(this.query);
+  }
+
+  updatePost(post) {
+    this.query = `UPDATE posts SET 
+    message = '${post.message}', 
+    isEdited = ${post.isedited} 
+    WHERE id = ${post.id}`;
+
+    return this.dataBase.none(this.query);
   }
 }
 

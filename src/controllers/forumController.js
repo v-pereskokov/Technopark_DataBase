@@ -158,8 +158,6 @@ class ForumController {
 
         resolve();
       } catch(e) {
-        console.log(e);
-
         ctx.body = e;
         ctx.status = 404;
 
