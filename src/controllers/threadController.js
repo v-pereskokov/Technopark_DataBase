@@ -1,5 +1,6 @@
 import postService from '../services/postService';
 import threadService from '../services/threadService';
+import getObjectFromArray from '../tools/getObjectFromArray';
 
 class ThreadController {
   create(ctx, next) {
@@ -13,9 +14,11 @@ class ThreadController {
 
         const posts = [];
 
+        const getPosts = await postService.getPosts(+thread.id);
+
         for (let post of body) {
           if (post.parent && +post.parent !== 0) {
-            const parentPost = await postService.getPostById(+post.parent);
+            const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
 
             if (!parentPost || +parentPost.threadid !== +thread.id) {
               ctx.body = '';
@@ -35,28 +38,17 @@ class ThreadController {
           }));
         }
 
-        const result = await postService.createAsBatch(body, thread);
+        await postService.createAsBatch(body, thread);
         await postService.updateForums(body.length, thread.forum);
 
-        const returned = [];
-
-        for (let post of result) {
-          for (let postDetails of post) {
-            returned.push(Object.assign(postDetails, {
-              parent: +postDetails.parent,
-              thread: +postDetails.threadid,
-              id: +postDetails.id
-            }));
-          }
-        }
-
-        ctx.body = returned;
+        ctx.body = body;
         ctx.status = 201;
 
         resolve();
       } catch (e) {
         ctx.body = '';
         ctx.status = 404;
+
         resolve();
       }
     });
@@ -80,7 +72,7 @@ class ThreadController {
         ctx.status = 200;
 
         resolve();
-      } catch(e) {
+      } catch (e) {
         ctx.body = '';
         ctx.status = 404;
 
