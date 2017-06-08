@@ -108,6 +108,12 @@ class PostService extends BaseService {
 
     return this.dataBase.none(this.query);
   }
+
+  getPosts(id) {
+    this.query = `SELECT * FROM posts WHERE threadId = ${id}`;
+
+    return this.dataBase.manyOrNone(this.query);
+  }
 }
 
 const postService = new PostService();
