@@ -174,10 +174,9 @@ class ThreadController {
       const slugOrId = ctx.params.slug_or_id;
       const body = ctx.request.body;
 
-      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-        await threadService.findThreadBySlug(slugOrId);
-
       try {
+        const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+          await threadService.findThreadBySlug(slugOrId);
         await threadService.updateThread(thread, ctx.request.body);
 
         ctx.body = Object.assign(thread, body, {
