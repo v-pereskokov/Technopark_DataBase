@@ -38,28 +38,17 @@ class ThreadController {
           }));
         }
 
-        const result = await postService.createAsBatch(body, thread);
+        await postService.createAsBatch(body, thread);
         await postService.updateForums(body.length, thread.forum);
 
-        const returned = [];
-
-        for (let post of result) {
-          for (let postDetails of post) {
-            returned.push(Object.assign(postDetails, {
-              parent: +postDetails.parent,
-              thread: +postDetails.threadid,
-              id: +postDetails.id
-            }));
-          }
-        }
-
-        ctx.body = returned;
+        ctx.body = body;
         ctx.status = 201;
 
         resolve();
       } catch (e) {
         ctx.body = '';
         ctx.status = 404;
+
         resolve();
       }
     });
@@ -83,7 +72,7 @@ class ThreadController {
         ctx.status = 200;
 
         resolve();
-      } catch(e) {
+      } catch (e) {
         ctx.body = '';
         ctx.status = 404;
 

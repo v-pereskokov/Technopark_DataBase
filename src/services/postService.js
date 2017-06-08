@@ -14,16 +14,12 @@ class PostService extends BaseService {
       for (let post of posts) {
         const id = await this.getNextId();
 
-        queries.push(transaction.any(this.getCreateBatchQuery({
-          postId: +id.id,
-          author: post.author,
-          created: date,
-          forum: thread.forum,
-          isEdited: post.isEdited ? post.isEdited : 'FALSE',
-          message: post.message,
-          parent: post.parent,
-          threadId: thread.id
-        })));
+        post.id = +id.id;
+        post.created = date;
+        post.forum = thread.forum;
+        post.thread = +thread.id;
+
+        queries.push(transaction.any(this.getCreateBatchQuery(post)));
       }
 
       return await transaction.batch(queries);
@@ -33,12 +29,11 @@ class PostService extends BaseService {
   getCreateBatchQuery(data) {
     this.query = `INSERT INTO posts 
     (id, author, created, forum, isEdited, message, parent, path, threadId) 
-    VALUES (${data.postId}, (SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower('${data.author}')), 
+    VALUES (${data.id}, (SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower('${data.author}')), 
     '${data.created}'::TIMESTAMPTZ, 
     (SELECT f.slug FROM forums f WHERE lower(f.slug) = lower('${data.forum}')), 
-    ${data.isEdited}, '${data.message}', ${data.parent ? `${data.parent}` : 'NULL'}, 
-    (SELECT path FROM posts WHERE id = ${data.parent ? `${data.parent}` : 'NULL'}) || ${data.postId}::BIGINT, ${data.threadId}) 
-    RETURNING *`;
+    ${data.isEdited ? data.isEdited : 'FALSE'}, '${data.message}', ${data.parent ? `${data.parent}` : 'NULL'}, 
+    (SELECT path FROM posts WHERE id = ${data.parent ? `${data.parent}` : 'NULL'}) || ${data.id}::BIGINT, ${data.thread})`;
 
     return this.query;
   }
