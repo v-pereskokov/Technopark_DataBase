@@ -41,33 +41,6 @@ class ForumService extends BaseService {
 
     return this.dataBase.one(this.query);
   }
-
-  update(user) {
-    this.query = `UPDATE users SET (fullname, email, about)
-     = ('${user.fullname}', '${user.email}', '${user.about}') 
-    WHERE LOWER(nickname) = LOWER('${user.nickname}') RETURNING *;`;
-
-    return this.dataBase.oneOrNone(this.query);
-  }
-
-  getUser(nickname, email) {
-    this.query = `SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}') OR 
-    LOWER(email) = LOWER('${email}');`;
-
-    return this.dataBase.many(this.query);
-  }
-
-  getUserByNickname(nickname) {
-    this.query = `SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}');`;
-
-    return this.dataBase.one(this.query);
-  }
-
-  getUserByEmail(email) {
-    this.query = `SELECT * FROM users WHERE LOWER(email) = LOWER('${email}');`;
-
-    return this.dataBase.none(this.query);
-  }
 }
 
 const forumService = new ForumService();

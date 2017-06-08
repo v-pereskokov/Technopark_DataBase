@@ -1,4 +1,7 @@
 import postService from '../services/postService';
+import userService from '../services/userService';
+import forumService from '../services/forumService';
+import threadService from '../services/threadService';
 
 class PostController {
   get(ctx, next) {
@@ -7,18 +10,44 @@ class PostController {
       const related = ctx.request.query.related;
 
       try {
-        const post = await postService.getPostById(id);
+        let post = await postService.getPostById(id);
+        post = Object.assign(post, {
+          id: +post.id,
+          isEdited: post.isedited,
+          thread: +post.threadid
+        });
+
+        let response = {
+          post
+        };
 
         if (related) {
+          if (related.indexOf('user') !== -1) {
+            const user = await userService.getUserByNickname(post.author);
+            response['author'] = Object.assign(user, {
+              id: +user.id
+            });
+          }
+
+          if (related.indexOf('forum') !== -1) {
+            const forum = await forumService.get(post.forum);
+            response['forum'] = Object.assign(forum, {
+              id: +forum.id,
+              posts: +forum.posts,
+              threads: +forum.threads
+            });
+          }
+
+          if (related.indexOf('thread') !== -1) {
+            const thread = await threadService.findThreadById(+post.thread);
+            response['thread'] = Object.assign(thread, {
+              id: +thread.id,
+              votes: +thread.votes
+            });
+          }
         }
 
-        ctx.body = {
-          post: Object.assign(post, {
-            id: +post.id,
-            isEdited: post.isedited,
-            thread: +post.threadid
-          })
-        };
+        ctx.body = response;
         ctx.status = 200;
 
         resolve();
