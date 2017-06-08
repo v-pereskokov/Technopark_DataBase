@@ -15,6 +15,20 @@ class ServiceController {
       resolve();
     });
   }
+
+  clear(ctx, next) {
+    return new Promise(async (resolve, reject) => {
+      await serviceService.truncate('posts');
+      await serviceService.truncate('threads');
+      await serviceService.truncate('forums');
+      await serviceService.truncate('users');
+
+      ctx.body = '';
+      ctx.status = 200;
+
+      resolve();
+    });
+  }
 }
 
 const serviceController = new ServiceController();

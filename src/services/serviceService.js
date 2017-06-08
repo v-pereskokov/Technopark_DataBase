@@ -14,6 +14,12 @@ class ServiceService extends BaseService {
 
     return this.dataBase.one(this.query);
   }
+
+  truncate(table) {
+    this.query = `TRUNCATE TABLE ${table} CASCADE`;
+
+    return this.dataBase.none(this.query);
+  }
 }
 
 const serviceService = new ServiceService();
