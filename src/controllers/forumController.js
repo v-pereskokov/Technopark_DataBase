@@ -59,9 +59,9 @@ class ForumController {
       const title = ctx.request.body.title;
       const message = ctx.request.body.message;
 
-      const forum = ctx.request.body.forum;
       const slug = !isEmpty(ctx.request.body.slug) ? ctx.request.body.slug :
         ctx.params.slug;
+      const forum = ctx.request.body.forum ? ctx.request.body.forum : slug;
 
       try {
         const result = await threadService.create({
