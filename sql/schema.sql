@@ -73,7 +73,7 @@ CREATE INDEX indexThreadsOnSlug ON threads (LOWER(slug));
 CREATE TABLE IF NOT EXISTS posts (
   id        BIGSERIAL   PRIMARY KEY,
   author    TEXT        NOT NULL,
-  created   TIMESTAMP   NOT NULL,
+  created   TIMESTAMP   WITH TIME ZONE DEFAULT current_timestamp,
   forum     TEXT        NOT NULL,
   isEdited BOOLEAN     DEFAULT FALSE,
   message   TEXT,

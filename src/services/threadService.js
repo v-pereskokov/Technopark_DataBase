@@ -15,7 +15,7 @@ class ThreadService extends BaseService {
     '${data.title}') 
     RETURNING *`;
 
-    return this.dataBase.one(this.query);
+    return this.dataBase.oneOrNone(this.query);
   }
 
   findThreadById(id) {
@@ -24,7 +24,7 @@ class ThreadService extends BaseService {
     threads t 
     WHERE t.id = ${id}`;
 
-    return this.dataBase.one(this.query);
+    return this.dataBase.oneOrNone(this.query);
   }
 
   findThreadBySlug(slug) {
@@ -34,7 +34,7 @@ class ThreadService extends BaseService {
     threads t 
     WHERE LOWER(t.slug) = LOWER('${slug}')`;
 
-    return this.dataBase.one(this.query);
+    return this.dataBase.oneOrNone(this.query);
   }
 
   getForumThreads(slug, limit, since, desc) {

@@ -8,45 +8,47 @@ class ThreadController {
       const body = ctx.request.body;
       const slugOrId = ctx.params.slug_or_id;
 
-      try {
-        const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-          await threadService.findThreadBySlug(slugOrId);
+      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+        await threadService.findThreadBySlug(slugOrId);
 
-        const posts = [];
+      const posts = [];
 
-        const getPosts = await postService.getPosts(+thread.id);
+      const getPosts = await postService.getPosts(+thread.id);
 
-        for (let post of body) {
-          if (post.parent && +post.parent !== 0) {
-            const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
+      for (let post of body) {
+        if (post.parent && +post.parent !== 0) {
+          const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
 
-            if (!parentPost || +parentPost.threadid !== +thread.id) {
-              ctx.body = '';
-              ctx.status = 409;
+          if (!parentPost || +parentPost.threadid !== +thread.id) {
+            ctx.body = '';
+            ctx.status = 409;
 
-              resolve();
+            resolve();
 
-              return;
-            }
+            return;
           }
-
-          posts.push(Object.assign(post, {
-            parent: post.parent ? +post.parent : 0,
-          }, {
-            thread: +thread.id,
-            forum: thread.forum
-          }));
         }
 
-        await postService.createAsBatch(body, thread);
+        posts.push(Object.assign(post, {
+          parent: post.parent ? +post.parent : 0,
+        }, {
+          thread: +thread.id,
+          forum: thread.forum
+        }));
+      }
+
+      try {
+        const result = await postService.createAsBatch(body, thread);
         await postService.updateForums(body.length, thread.forum);
+
+        result.
 
         ctx.body = body;
         ctx.status = 201;
 
         resolve();
       } catch (e) {
-        ctx.body = '';
+        ctx.body = e;
         ctx.status = 404;
 
         resolve();
