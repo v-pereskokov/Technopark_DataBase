@@ -45,7 +45,7 @@ class ForumService extends BaseService {
   }
 
   getId(slug) {
-    return this.dataBase.one(`SELECT id FROM forums WHERE LOWER(slug) = LOWER('${slug}');`);
+    return this.dataBase.oneOrNone(`SELECT id FROM forums WHERE LOWER(slug) = LOWER('${slug}');`);
   }
 
   checkAuthor(nickname, context = this.dataBase) {

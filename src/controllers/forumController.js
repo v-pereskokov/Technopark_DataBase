@@ -83,7 +83,7 @@ class ForumController {
             slug: result.slug === result.forum ? '' : result.slug
           });
           ctx.status = 201;
-        } catch(error) {
+        } catch (error) {
           ctx.body = null;
           ctx.status = 404;
         }
@@ -125,24 +125,25 @@ class ForumController {
       const since = ctx.query.since;
       const slug = ctx.params.slug;
 
-      try {
-        const id = await forumService.getId(slug);
+      const id = await forumService.getId(slug);
 
-        ctx.body = await userService.getForumMembers({
-          id: +id.id,
-          limit,
-          since,
-          desc
-        });
-        ctx.status = 200;
-
-        resolve();
-      } catch (e) {
-        ctx.body = '';
+      if (!id) {
+        ctx.body = null;
         ctx.status = 404;
 
         resolve();
+        return;
       }
+
+      ctx.body = await userService.getForumMembers({
+        id: +id.id,
+        limit,
+        since,
+        desc
+      });
+      ctx.status = 200;
+
+      resolve();
     });
   }
 }
