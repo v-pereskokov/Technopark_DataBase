@@ -11,33 +11,33 @@ class ThreadController {
       const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
         await threadService.findThreadBySlug(slugOrId);
 
-      const posts = [];
+      try {
+        const posts = [];
 
-      const getPosts = await postService.getPosts(+thread.id);
+        const getPosts = await postService.getPosts(+thread.id);
 
-      for (let post of body) {
-        if (post.parent && +post.parent !== 0) {
-          const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
+        for (let post of body) {
+          if (post.parent && +post.parent !== 0) {
+            const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
 
-          if (!parentPost || +parentPost.threadid !== +thread.id) {
-            ctx.body = '';
-            ctx.status = 409;
+            if (!parentPost || +parentPost.threadid !== +thread.id) {
+              ctx.body = '';
+              ctx.status = 409;
 
-            resolve();
+              resolve();
 
-            return;
+              return;
+            }
           }
+
+          posts.push(Object.assign(post, {
+            parent: post.parent ? +post.parent : 0,
+          }, {
+            thread: +thread.id,
+            forum: thread.forum
+          }));
         }
 
-        posts.push(Object.assign(post, {
-          parent: post.parent ? +post.parent : 0,
-        }, {
-          thread: +thread.id,
-          forum: thread.forum
-        }));
-      }
-
-      try {
         const result = await postService.createAsBatch(body, thread);
         await postService.updateForums(body.length, thread.forum);
 
