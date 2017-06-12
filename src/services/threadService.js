@@ -5,6 +5,7 @@ class ThreadService extends BaseService {
     super();
   }
 
+  // delete subq forum
   topCreate(data, context = this.dataBase) {
     return context.oneOrNone(`with inserted_result as (insert
 into
@@ -12,7 +13,7 @@ into
     (author, created, forum, message, slug, title) select
         '${data.username}',
         ${data.created ? `'${data.created}'::TIMESTAMPTZ` : 'current_timestamp'},
-        '${data.forum}',
+        (SELECT f.slug FROM forums f WHERE LOWER(f.slug) = LOWER('${data.forum}')),
         '${data.message}',
         '${data.slug}',
         '${data.title}'
@@ -40,22 +41,6 @@ into
 
   // optimize created?
   create(data, context = this.dataBase) {
-    console.log(`INSERT INTO threads (author, created, forum, message, slug, title) 
-    VALUES ('${data.username}', 
-    ${data.created ? `'${data.created}'::TIMESTAMPTZ` : 'current_timestamp'},
-    (SELECT f.slug FROM forums f WHERE LOWER(f.slug) = LOWER('${data.forum}')), 
-    '${data.message}', '${data.slug}', 
-    '${data.title}') 
-    RETURNING 
-    id::int, 
-    author, 
-    created, 
-    forum, 
-    message, 
-    slug, 
-    title, 
-    votes::int`);
-
     return context.oneOrNone(`INSERT INTO threads (author, created, forum, message, slug, title) 
     VALUES ('${data.username}', 
     ${data.created ? `'${data.created}'::TIMESTAMPTZ` : 'current_timestamp'},

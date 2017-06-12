@@ -56,56 +56,23 @@ class ForumController {
       const forum = ctx.request.body.forum || slug;
 
       forumService.task(async (task) => {
-        // mb in create
-        // const forumSlug = await forumService.getSlug(forum || slug, task);
+        // const thread = await threadService.findThreadBySlug(slug, task);
         //
-        // console.log('\n');
-        // console.log(forumSlug);
-        // console.log(forum);
-        // console.log('\n');
+        // if (thread) {
+        //   ctx.body = thread;
+        //   ctx.status = 409;
         //
-        // if (forumSlug) {
-        //   const result = await threadService.topCreate({
-        //     username,
-        //     created,
-        //     forum: forumSlug.slug,
-        //     slug,
-        //     message,
-        //     title
-        //   }, task);
-        //
-        //   let status = null;
-        //   if (result.action === 'updated') {
-        //     status = 409;
-        //   } else {
-        //     await forumService.updateForums(forum, task);
-        //     status = 201;
-        //   }
-        //
-        //   ctx.body = Object.assign(result, {
-        //     slug: result.slug === result.forum ? '' : result.slug
-        //   });
-        //   ctx.status = status;
-        // } else {
-        //   ctx.body = null;
-        //   ctx.status = 404;
+        //   resolve();
+        //   return;
         // }
-        //
-        // resolve();
 
-        const thread = await threadService.findThreadBySlug(slug, task);
+        const forumSlug = await forumService.getSlug(slug);
 
-        if (thread) {
-          ctx.body = thread;
-          ctx.status = 409;
-
-          resolve();
-          return;
-        }
+        console.log(forumSlug);
 
         // delete try
         try {
-          const result = await threadService.create({
+          const result = await threadService.topCreate({
             username,
             created,
             forum,
@@ -114,13 +81,21 @@ class ForumController {
             title
           }, task);
 
-          await forumService.updateForums(forum, task);
+          let status = null;
+          if (result.action === 'updated') {
+            status = 409;
+          } else {
+            await forumService.updateForums(forum, task);
+            status = 201;
+          }
 
           ctx.body = Object.assign(result, {
             slug: result.slug === result.forum ? '' : result.slug
           });
-          ctx.status = 201;
+          ctx.status = status;
         } catch(error) {
+          console.log(error);
+
           ctx.body = null;
           ctx.status = 404;
         }

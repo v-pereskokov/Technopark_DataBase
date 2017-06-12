@@ -43,7 +43,7 @@ class ForumService extends BaseService {
   getSlug(slug) {
     this.query = `SELECT slug FROM forums WHERE LOWER(slug) = LOWER('${slug}');`;
 
-    return this.dataBase.one(this.query);
+    return this.dataBase.oneOrNone(this.query);
   }
 
   getId(slug) {
