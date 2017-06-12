@@ -58,13 +58,11 @@ into
     votes::int`);
   }
 
-  findThreadById(id) {
-    this.query = `SELECT t.id, t.slug, t.author, t.created, t.forum, t.message, t.title, t.votes 
+  findThreadById(id, context = this.dataBase) {
+    return context.oneOrNone(`SELECT t.id, t.slug, t.author, t.created, t.forum, t.message, t.title, t.votes 
     FROM 
     threads t 
-    WHERE t.id = ${id}`;
-
-    return this.dataBase.oneOrNone(this.query);
+    WHERE t.id = ${id}`);
   }
 
   findThreadBySlug(slug, context = this.dataBase) {

@@ -5,21 +5,15 @@ class PostService extends BaseService {
     super();
   }
 
-  createAsBatch(posts, thread) {
-    const date = new Date().toISOString();
-
-    return this.dataBase.tx(async (transaction) => {
+  createAsBatch(posts, thread, context = this.dataBase) {
+    return context.tx(async (transaction) => {
       const queries = [];
 
       for (let post of posts) {
-        const id = await this.getNextId();
-
-        post.id = +id.id;
-        post.created = date;
         post.forum = thread.forum;
         post.thread = +thread.id;
 
-        queries.push(transaction.any(this.getCreateBatchQuery(post)));
+        queries.push(transaction.oneOrNone(this.getCreateBatchQuery(post)));
       }
 
       return await transaction.batch(queries);
@@ -28,27 +22,29 @@ class PostService extends BaseService {
 
   getCreateBatchQuery(data) {
     this.query = `INSERT INTO posts 
-    (id, author, created, forum, isEdited, message, parent, path, threadId) 
-    VALUES (${data.id}, (SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower('${data.author}')), 
-    '${data.created}'::TIMESTAMPTZ, 
+    (id, author, forum, isEdited, message, parent, path, threadId) 
+    VALUES (nextval('posts_id_seq'), '${data.author}', 
     (SELECT f.slug FROM forums f WHERE lower(f.slug) = lower('${data.forum}')), 
     ${data.isEdited ? data.isEdited : 'FALSE'}, '${data.message}', ${data.parent ? `${data.parent}` : 'NULL'}, 
-    (SELECT path FROM posts WHERE id = ${data.parent ? `${data.parent}` : 'NULL'}) || ${data.id}::BIGINT, ${data.thread})`;
+    (SELECT path FROM posts WHERE id = ${data.parent ? `${data.parent}` : 'NULL'}) || currval('posts_id_seq')::BIGINT, 
+    ${data.thread})
+    RETURNING 
+    id::int, 
+    author, 
+    created, 
+    forum, 
+    isedited as "isEdited", 
+    message, 
+    parent::int, 
+    path, 
+    threadId::int as "thread"`;
 
     return this.query;
   }
 
-  getNextId() {
-    this.query = `SELECT nextval('posts_id_seq') as id`;
-
-    return this.dataBase.one(this.query);
-  }
-
-  updateForums(size, forum) {
-    this.query = `UPDATE forums SET posts = posts + ${size} 
-    WHERE lower(slug) = lower('${forum}')`;
-
-    return this.dataBase.none(this.query);
+  updateForums(size, forum, context = this.dataBase) {
+    return context.none(`UPDATE forums SET posts = posts + ${size} 
+    WHERE lower(slug) = lower('${forum}')`);
   }
 
   getPostsFlatSort(id, desc, limit, offset) {

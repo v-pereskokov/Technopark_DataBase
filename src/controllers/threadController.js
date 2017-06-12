@@ -8,49 +8,18 @@ class ThreadController {
       const body = ctx.request.body;
       const slugOrId = ctx.params.slug_or_id;
 
-      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-        await threadService.findThreadBySlug(slugOrId);
+      threadService.task(async (task) => {
+        const thread = +slugOrId ? await threadService.findThreadById(+slugOrId, task) :
+          await threadService.findThreadBySlug(slugOrId, task);
 
-      try {
-        const posts = [];
-
-        const getPosts = await postService.getPosts(+thread.id);
-
-        for (let post of body) {
-          if (post.parent && +post.parent !== 0) {
-            const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
-
-            if (!parentPost || +parentPost.threadid !== +thread.id) {
-              ctx.body = '';
-              ctx.status = 409;
-
-              resolve();
-
-              return;
-            }
-          }
-
-          posts.push(Object.assign(post, {
-            parent: post.parent ? +post.parent : 0,
-          }, {
-            thread: +thread.id,
-            forum: thread.forum
-          }));
-        }
-
-        const result = await postService.createAsBatch(body, thread);
+        const result = await postService.createAsBatch(body, thread, task);
         await postService.updateForums(body.length, thread.forum);
 
-        ctx.body = body;
+        ctx.body = result;
         ctx.status = 201;
 
         resolve();
-      } catch (e) {
-        ctx.body = e;
-        ctx.status = 404;
-
-        resolve();
-      }
+      });
     });
   }
 
