@@ -1,4 +1,5 @@
 import BaseService from './baseService';
+import makeInsertPostsQuery from '../tools/makeInsertPostsQuery';
 
 class PostService extends BaseService {
   constructor() {
@@ -6,29 +7,14 @@ class PostService extends BaseService {
   }
 
   createAsBatch(posts, thread, context = this.dataBase) {
-    const cs = new this.pgp.helpers.ColumnSet([
-        'id', 'author', 'forum', 'isedited', 'message', 'parent', 'path', 'threadid'
-      ],
-      {table: 'posts'});
+    return context.tx(transaction => {
+      for (let post of posts) {
+        post.forum = thread.forum;
+        post.thread = +thread.id;
+      }
 
-    for (let post of posts) {
-      post.id = 'nextval(\'posts_id_seq\')';
-      post.forum = thread.forum;
-      post.threadid = +thread.id;
-      post.isedited = post.isEdited || 'FALSE';
-      post.path = `(SELECT path FROM posts WHERE id = ${post.parent ? `${post.parent}` : 'NULL'}) || 
-        currval('posts_id_seq')::BIGINT`;
-      post.parent = post.parent || 0;
-    }
-
-    const query = this.pgp.helpers.insert(posts, cs) + 'RETURNING id::int, author, created, forum, isedited as "isEdited", message, parent::int, path, threadId::int as "thread"';
-
-    return context.manyOrNone(query);
-    // return context.tx(async (transaction) => {
-    //   const queries = [];
-    //
-    //   return await transaction.batch(queries);
-    // });
+      return transaction.manyOrNone(makeInsertPostsQuery(posts));
+    });
   }
 
   getCreateBatchQuery(data) {
