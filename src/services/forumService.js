@@ -5,15 +5,29 @@ class ForumService extends BaseService {
     super();
   }
 
-  create(user) {
-    this.query = `INSERT INTO forums ("user", slug, title) 
-    VALUES (
-    (SELECT nickname FROM users WHERE LOWER(nickname) = LOWER('${user.user}')),
-    '${user.slug}', 
-    '${user.title}'
-    );`;
-
-    return this.dataBase.none(this.query);
+  create(user, context = this.dataBase) {
+    return context.one(`WITH ins_result AS ( 
+      INSERT INTO forums 
+        AS column_insert (slug, title, "user")  
+        SELECT 
+        '${user.slug}',
+        '${user.title}',
+        '${user.nickname}'
+        WHERE 
+        'inserted' = SET_CONFIG('upsert.action', 'inserted', true)
+            ON CONFLICT (LOWER(slug)) DO UPDATE
+        SET slug = column_insert.slug 
+        WHERE
+            'updated' = SET_CONFIG('upsert.action', 'updated', true)
+             RETURNING *
+      )
+        SELECT
+            CURRENT_SETTING('upsert.action') AS "action",
+            ins.slug,
+            ins.title,
+            ins."user"
+        from
+            ins_result ins`);
   }
 
   get(slug) {
@@ -42,9 +56,9 @@ class ForumService extends BaseService {
     return this.dataBase.one(this.query);
   }
 
-  checkAuthor(nickname) {
-    return this.dataBase.oneOrNone(`SELECT id, nickname FROM users WHERE
-     LOWER(nickname) = LOWER('${nickname}')`);
+  checkAuthor(nickname, context = this.dataBase) {
+    return context.oneOrNone(`SELECT id, nickname FROM users WHERE 
+    nickname = '${nickname}'::citext`);
   }
 }
 

@@ -9,33 +9,28 @@ class ForumController {
       const body = ctx.request.body;
 
 
-      // forumService.task()
+      forumService.task(async (task) => {
+        const author = await forumService.checkAuthor(body.user, task);
 
-      try {
-        await forumService.create(body);
+        if (!author) {
+          ctx.body = null;
+          ctx.status = 404;
 
-        body.user = (await userService.getNickname(body.user)).nickname;
-
-        ctx.body = body;
-        ctx.status = 201;
-
-        resolve();
-      } catch (e) {
-        switch (+e.code) {
-          case 23502:
-            ctx.body = '';
-            ctx.status = 404;
-            break;
-          case 23505:
-            ctx.body = await forumService.get(body.slug);
-            ctx.status = 409;
-            break;
-          default:
-            break;
+          resolve();
+          return;
         }
 
+        const data = await forumService.create({
+          slug: body.slug,
+          title: body.title,
+          nickname: author.nickname
+        }, task);
+
+        ctx.body = data;
+        ctx.status = data.action === 'updated' ? 409 : 201;
+
         resolve();
-      }
+      });
     });
   }
 

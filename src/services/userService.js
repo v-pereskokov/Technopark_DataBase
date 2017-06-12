@@ -6,46 +6,26 @@ class UserService extends BaseService {
   }
 
   create(user, context = this.dataBase) {
-    this.query = `INSERT INTO users (nickname, email, fullname, about) 
-    VALUES ('${user.nickname}', '${user.email}', '${user.fullname}', '${user.about}')`;
-
-    return context.none(this.query);
+    return context.none(`INSERT INTO users (nickname, email, fullname, about) 
+    VALUES ('${user.nickname}', '${user.email}', '${user.fullname}', '${user.about}')`);
   }
 
   update(user, context = this.dataBase) {
-    this.query = `UPDATE users SET 
+    return context.oneOrNone(`UPDATE users SET 
     fullname = COALESCE(${user.fullname ? `'${user.fullname}'` : 'NULL'}, fullname), 
     email = COALESCE(${user.email ? `'${user.email}'` : 'NULL'}, email),
     about = COALESCE(${user.about ? `'${user.about}'` : 'NULL'}, about) 
     WHERE LOWER(nickname) = LOWER('${user.nickname}') 
-    RETURNING *`;
-
-    return context.oneOrNone(this.query);
+    RETURNING *`);
   }
 
   getUser(nickname, email, context = this.dataBase) {
-    this.query = `SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}') OR 
-    LOWER(email) = LOWER('${email}');`;
-
-    return context.many(this.query);
+    return context.many(`SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}') OR 
+    LOWER(email) = LOWER('${email}');`);
   }
 
   getUserByNickname(nickname) {
-    this.query = `SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}');`;
-
-    return this.dataBase.oneOrNone(this.query);
-  }
-
-  getUserByEmail(email) {
-    this.query = `SELECT * FROM users WHERE LOWER(email) = LOWER('${email}');`;
-
-    return this.dataBase.none(this.query);
-  }
-
-  getNickname(nickname) {
-    this.query = `SELECT u.nickname FROM users u WHERE LOWER(nickname) = LOWER('${nickname}');`;
-
-    return this.dataBase.one(this.query);
+    return this.dataBase.oneOrNone(`SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}');`);
   }
 
   getForumMembers(data) {
@@ -68,12 +48,14 @@ class UserService extends BaseService {
   }
 
   checkErrors(nickname, email, context = this.dataBase) {
-    this.query = `select case when (select id from users where
-     nickname<>'${nickname}'::citext and email='${email}'::citext)
-     is not null then true else false end as "conflict", case when (select id from users where
-     nickname='${nickname}'::citext) is not null then false else true end as "notfound"`;
-
-    return context.one(this.query);
+    return context.one(`SELECT 
+      CASE WHEN (
+        SELECT id FROM users 
+        WHERE nickname <> '${nickname}'::citext AND email = '${email}'::citext
+      ) IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict", 
+      CASE WHEN (
+        SELECT id FROM users 
+        WHERE nickname = '${nickname}'::citext) IS NOT NULL THEN FALSE ELSE TRUE END AS "notfound"`);
   }
 }
 

@@ -45,15 +45,15 @@ CREATE UNIQUE INDEX indexUsersOnEmail ON users (LOWER(email));
 CREATE TABLE IF NOT EXISTS forums (
   id      BIGSERIAL     PRIMARY KEY,
   posts   INT           NOT NULL DEFAULT 0,
-  slug    TEXT,
+  slug    CITEXT COLLATE "ucs_basic" NOT NULL,
   threads INT           NOT NULL DEFAULT 0,
   title   TEXT          NOT NULL,
-  "user"  TEXT          NOT NULL
+  "user"  CITEXT COLLATE "ucs_basic" NOT NULL
 );
 
 
 CREATE UNIQUE INDEX indexForumOnSlug ON forums (LOWER(slug));
-CREATE INDEX indexForumonUser ON forums (lower("user"));
+CREATE INDEX indexForumonUser ON forums (LOWER("user"));
 
 
 CREATE TABLE IF NOT EXISTS threads (
