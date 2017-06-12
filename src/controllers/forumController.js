@@ -5,7 +5,7 @@ import {isEmpty} from '../tools/isEmpty';
 
 class ForumController {
   create(ctx, next) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const body = ctx.request.body;
 
 
@@ -47,51 +47,86 @@ class ForumController {
   }
 
   createThread(ctx, next) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const username = ctx.request.body.author;
       const created = ctx.request.body.created;
       const title = ctx.request.body.title;
       const message = ctx.request.body.message;
+      const slug = ctx.request.body.slug || ctx.params.slug;
+      const forum = ctx.request.body.forum || slug;
 
-      const slug = !isEmpty(ctx.request.body.slug) ? ctx.request.body.slug :
-        ctx.params.slug;
-      const forum = ctx.request.body.forum ? ctx.request.body.forum : slug;
+      forumService.task(async (task) => {
+        // mb in create
+        // const forumSlug = await forumService.getSlug(forum || slug, task);
+        //
+        // console.log('\n');
+        // console.log(forumSlug);
+        // console.log(forum);
+        // console.log('\n');
+        //
+        // if (forumSlug) {
+        //   const result = await threadService.topCreate({
+        //     username,
+        //     created,
+        //     forum: forumSlug.slug,
+        //     slug,
+        //     message,
+        //     title
+        //   }, task);
+        //
+        //   let status = null;
+        //   if (result.action === 'updated') {
+        //     status = 409;
+        //   } else {
+        //     await forumService.updateForums(forum, task);
+        //     status = 201;
+        //   }
+        //
+        //   ctx.body = Object.assign(result, {
+        //     slug: result.slug === result.forum ? '' : result.slug
+        //   });
+        //   ctx.status = status;
+        // } else {
+        //   ctx.body = null;
+        //   ctx.status = 404;
+        // }
+        //
+        // resolve();
 
-      try {
-        const result = await threadService.create({
-          username,
-          created,
-          forum,
-          slug,
-          message,
-          title
-        });
+        const thread = await threadService.findThreadBySlug(slug, task);
 
-        await forumService.updateForums(forum);
-
-        ctx.body = Object.assign(result, {
-          id: +result.id,
-          slug: result.slug === result.forum ? '' : result.slug,
-          votes: +result.votes
-        });
-        ctx.status = 201;
-
-        resolve();
-      } catch (e) {
-        try {
-          const conflict = await threadService.findThreadBySlug(slug);
-
-          ctx.body = Object.assign(conflict, {
-            id: +conflict.id
-          });
+        if (thread) {
+          ctx.body = thread;
           ctx.status = 409;
-        } catch (e) {
-          ctx.body = '';
+
+          resolve();
+          return;
+        }
+
+        // delete try
+        try {
+          const result = await threadService.create({
+            username,
+            created,
+            forum,
+            slug,
+            message,
+            title
+          }, task);
+
+          await forumService.updateForums(forum, task);
+
+          ctx.body = Object.assign(result, {
+            slug: result.slug === result.forum ? '' : result.slug
+          });
+          ctx.status = 201;
+        } catch(error) {
+          ctx.body = null;
           ctx.status = 404;
         }
 
         resolve();
-      }
+      });
     });
   }
 

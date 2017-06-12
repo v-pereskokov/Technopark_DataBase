@@ -36,10 +36,8 @@ class ForumService extends BaseService {
     WHERE LOWER(f.slug) = LOWER('${slug}');`);
   }
 
-  updateForums(slug) {
-    this.query = `UPDATE forums SET threads = threads + 1 WHERE LOWER(slug) = LOWER('${slug}')`;
-
-    return this.dataBase.none(this.query);
+  updateForums(slug, context = this.dataBase) {
+    return context.none(`UPDATE forums SET threads = threads + 1 WHERE LOWER(slug) = LOWER('${slug}')`);
   }
 
   getSlug(slug) {

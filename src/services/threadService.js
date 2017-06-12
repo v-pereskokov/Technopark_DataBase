@@ -5,17 +5,72 @@ class ThreadService extends BaseService {
     super();
   }
 
+  topCreate(data, context = this.dataBase) {
+    return context.oneOrNone(`with inserted_result as (insert
+into
+    threads as ci
+    (author, created, forum, message, slug, title) select
+        '${data.username}',
+        ${data.created ? `'${data.created}'::TIMESTAMPTZ` : 'current_timestamp'},
+        '${data.forum}',
+        '${data.message}',
+        '${data.slug}',
+        '${data.title}'
+    where
+        'inserted' = set_config('upsert.action', 'inserted', true)
+            on conflict (LOWER(slug)) do update
+        set
+            id = ci.id
+        where
+            'updated' = set_config('upsert.action', 'updated', true)
+             returning *)
+        select
+            current_setting('upsert.action') AS "action",
+            t.id::int, 
+            t.author, 
+            t.created, 
+            t.forum, 
+            t.message, 
+            t.slug, 
+            t.title, 
+            t.votes::int
+        from
+            inserted_result t;`);
+  }
+
   // optimize created?
-  create(data) {
-    this.query = `INSERT INTO threads (author, created, forum, message, slug, title) 
-    VALUES ((SELECT u.nickname FROM users u WHERE lower(u.nickname) = lower('${data.username}')), 
+  create(data, context = this.dataBase) {
+    console.log(`INSERT INTO threads (author, created, forum, message, slug, title) 
+    VALUES ('${data.username}', 
     ${data.created ? `'${data.created}'::TIMESTAMPTZ` : 'current_timestamp'},
-    (SELECT f.slug FROM forums f WHERE lower(f.slug) = lower('${data.forum}')), 
+    (SELECT f.slug FROM forums f WHERE LOWER(f.slug) = LOWER('${data.forum}')), 
     '${data.message}', '${data.slug}', 
     '${data.title}') 
-    RETURNING *`;
+    RETURNING 
+    id::int, 
+    author, 
+    created, 
+    forum, 
+    message, 
+    slug, 
+    title, 
+    votes::int`);
 
-    return this.dataBase.oneOrNone(this.query);
+    return context.oneOrNone(`INSERT INTO threads (author, created, forum, message, slug, title) 
+    VALUES ('${data.username}', 
+    ${data.created ? `'${data.created}'::TIMESTAMPTZ` : 'current_timestamp'},
+    (SELECT f.slug FROM forums f WHERE LOWER(f.slug) = LOWER('${data.forum}')), 
+    '${data.message}', '${data.slug}', 
+    '${data.title}') 
+    RETURNING 
+    id::int, 
+    author, 
+    created, 
+    forum, 
+    message, 
+    slug, 
+    title, 
+    votes::int`);
   }
 
   findThreadById(id) {
@@ -27,14 +82,12 @@ class ThreadService extends BaseService {
     return this.dataBase.oneOrNone(this.query);
   }
 
-  findThreadBySlug(slug) {
-    this.query = `SELECT t.id, t.author, t.forum, 
+  findThreadBySlug(slug, context = this.dataBase) {
+    return context.oneOrNone(`SELECT t.id::int, t.author, t.forum, 
     t.slug, t.created, t.message, t.title, t.votes 
     FROM 
     threads t 
-    WHERE LOWER(t.slug) = LOWER('${slug}')`;
-
-    return this.dataBase.oneOrNone(this.query);
+    WHERE LOWER(t.slug) = LOWER('${slug}')`);
   }
 
   getForumThreads(slug, limit, since, desc) {
