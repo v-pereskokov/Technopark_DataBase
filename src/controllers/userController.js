@@ -45,8 +45,6 @@ class UserController {
       userService.dataBase.task(async (task) => {
         const errors = await userService.checkErrors(body.nickname, body.email, task);
 
-        console.log(errors);
-
         if (errors.notfound) {
           ctx.body = null;
           ctx.status = 404;
@@ -61,10 +59,14 @@ class UserController {
           return;
         }
 
-        ctx.body = await userService.update(body, task);
-        ctx.status = 200;
+        try {
+          ctx.body = await userService.update(body, task);
+          ctx.status = 200;
 
-        resolve();
+          resolve();
+        } catch(e) {
+          console.log(e);
+        }
       });
     });
   }

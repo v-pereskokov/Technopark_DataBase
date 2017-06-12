@@ -68,17 +68,10 @@ class UserService extends BaseService {
   }
 
   checkErrors(nickname, email, context = this.dataBase) {
-    this.query = `SELECT 
-      CASE WHEN (
-        SELECT id FROM users 
-        WHERE nickname <> '${nickname}' and email='${email}'
-      ) IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict", 
-      CASE WHEN (
-        SELECT id FROM users 
-        WHERE nickname='${nickname}'
-      ) IS NOT NULL THEN FALSE ELSE TRUE END AS "notfound"`;
-
-    console.log(this.query);
+    this.query = `select case when (select id from users where
+     nickname<>'${nickname}'::citext and email='${email}'::citext)
+     is not null then true else false end as "conflict", case when (select id from users where
+     nickname='${nickname}'::citext) is not null then false else true end as "notfound"`;
 
     return context.one(this.query);
   }
