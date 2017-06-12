@@ -36,17 +36,13 @@ class ForumController {
 
   get(ctx, next) {
     return new Promise(async (resolve, reject) => {
-      try {
-        ctx.body = await forumService.get(ctx.params.slug);
-        ctx.status = 200;
 
-        resolve();
-      } catch(e) {
-        ctx.body = '';
-        ctx.status = 404;
+      const result = await forumService.get(ctx.params.slug);
 
-        resolve();
-      }
+      ctx.body = result;
+      ctx.status = result ? 200 : 404;
+
+      resolve();
     });
   }
 
@@ -81,7 +77,7 @@ class ForumController {
         ctx.status = 201;
 
         resolve();
-      } catch(e) {
+      } catch (e) {
         try {
           const conflict = await threadService.findThreadBySlug(slug);
 
@@ -89,7 +85,7 @@ class ForumController {
             id: +conflict.id
           });
           ctx.status = 409;
-        } catch(e) {
+        } catch (e) {
           ctx.body = '';
           ctx.status = 404;
         }
@@ -122,7 +118,7 @@ class ForumController {
 
         ctx.body = top;
         ctx.status = 200;
-      } catch(e) {
+      } catch (e) {
         if (e.query.indexOf('ORDER BY') !== -1) {
           ctx.body = [];
           ctx.status = 200;
@@ -155,7 +151,7 @@ class ForumController {
         ctx.status = 200;
 
         resolve();
-      } catch(e) {
+      } catch (e) {
         ctx.body = '';
         ctx.status = 404;
 

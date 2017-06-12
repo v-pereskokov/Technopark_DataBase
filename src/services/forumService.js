@@ -31,11 +31,9 @@ class ForumService extends BaseService {
   }
 
   get(slug) {
-    this.query = `SELECT f.id, f.title, f."user", f.slug, f.posts, f.threads 
+    return this.dataBase.oneOrNone(`SELECT f.id, f.title, f."user", f.slug, f.posts, f.threads 
     FROM forums f 
-    WHERE LOWER(f.slug) = LOWER('${slug}');`;
-
-    return this.dataBase.one(this.query);
+    WHERE LOWER(f.slug) = LOWER('${slug}');`);
   }
 
   updateForums(slug) {
