@@ -12,13 +12,37 @@ class ThreadController {
         const thread = +slugOrId ? await threadService.findThreadById(+slugOrId, task) :
           await threadService.findThreadBySlug(slugOrId, task);
 
-        const result = await postService.createAsBatch(body, thread, task);
-        await postService.updateForums(body.length, thread.forum);
+        try {
+          const getPosts = await postService.getPosts(+thread.id, task);
 
-        ctx.body = result;
-        ctx.status = 201;
+          for (let post of body) {
+            if (post.parent && +post.parent !== 0) {
+              const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
 
-        resolve();
+              if (!parentPost || +parentPost.threadid !== +thread.id) {
+                ctx.body = '';
+                ctx.status = 409;
+
+                resolve();
+
+                return;
+              }
+            }
+          }
+
+          const result = await postService.createAsBatch(body, thread, task);
+          await postService.updateForums(body.length, thread.forum);
+
+          ctx.body = result;
+          ctx.status = 201;
+
+          resolve();
+        } catch (error) {
+          ctx.body = null;
+          ctx.status = 404;
+
+          resolve();
+        }
       });
     });
   }

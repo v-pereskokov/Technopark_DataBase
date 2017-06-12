@@ -70,7 +70,7 @@ into
     t.slug, t.created, t.message, t.title, t.votes 
     FROM 
     threads t 
-    WHERE LOWER(t.slug) = LOWER('${slug}')`);
+    WHERE t.slug = '${slug}'::citext`);
   }
 
   getForumThreads(slug, limit, since, desc) {
@@ -115,6 +115,43 @@ into
     WHERE id = ${+thread.id}`;
 
     return this.dataBase.none(this.query);
+
+    return `select case when (select id from "user" where
+     nickname<>'${nickname}'::citext and email='${email}'::citext)
+     is not null then true else false end as "conflict", case when (select id from "user" where
+     nickname='${nickname}'::citext) is not null then false else true end as "notfound"`;
+  }
+
+  getPostsAndUser(threadId, nickname, context = this.dataBase) {
+    return context.any(`SELECT 
+    CASE WHEN (
+      SELECT id 
+      FROM users
+      WHERE nickname = '${nickname}'::citext
+    ) IS NOT NULL THEN TRUE ELSE FALSE END AS "notfound",  
+    CASE WHEN (
+      `);
+
+
+
+
+
+
+    // return context.any(`WITH author AS (
+    //     SELECT id, nickname
+    //     FROM users
+    //     WHERE nickname = '${nickname}'::citext
+    //   ),
+    //   post AS (
+    //     SELECT id, CAST(threadId AS text) as tid
+    //     FROM posts
+    //     WHERE threadId = ${threadId}
+    //   )
+    //   SELECT id AS first, nickname AS second
+    //   FROM author
+    //   UNION ALL
+    //   SELECT id, tid
+    //   FROM post`);
   }
 }
 

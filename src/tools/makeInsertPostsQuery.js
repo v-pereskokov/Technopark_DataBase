@@ -4,8 +4,9 @@ const makeInsertPostsQuery = posts => {
     VALUES `;
 
   for (let post of posts) {
-    query += `(nextval('posts_id_seq'), '${post.author}', 
-      '${post.forum}', ${post.isEdited || 'FALSE'}, '${post.message}', ${post.parent ? `${post.parent}` : 'NULL'}, 
+    query += `(nextval('posts_id_seq'), (SELECT u.nickname FROM users u WHERE LOWER(u.nickname) = LOWER('${post.author}')), 
+      '${post.forum}', 
+      ${post.isEdited || 'FALSE'}, '${post.message}', ${post.parent ? `${post.parent}` : 'NULL'}, 
       (SELECT path FROM posts WHERE id = ${post.parent ? `${post.parent}` : 'NULL'}) || currval('posts_id_seq')::BIGINT, 
       ${post.thread}),`;
   }

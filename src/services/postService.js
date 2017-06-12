@@ -17,28 +17,6 @@ class PostService extends BaseService {
     });
   }
 
-  getCreateBatchQuery(data) {
-    this.query = `INSERT INTO posts 
-    (id, author, forum, isEdited, message, parent, path, threadId) 
-    VALUES (nextval('posts_id_seq'), '${data.author}', 
-    '${data.forum}', 
-    ${data.isEdited || 'FALSE'}, '${data.message}', ${data.parent ? `${data.parent}` : 'NULL'}, 
-    (SELECT path FROM posts WHERE id = ${data.parent ? `${data.parent}` : 'NULL'}) || currval('posts_id_seq')::BIGINT, 
-    ${data.thread})
-    RETURNING 
-    id::int, 
-    author, 
-    created, 
-    forum, 
-    isedited as "isEdited", 
-    message, 
-    parent::int, 
-    path, 
-    threadId::int as "thread"`;
-
-    return this.query;
-  }
-
   updateForums(size, forum, context = this.dataBase) {
     return context.none(`UPDATE forums SET posts = posts + ${size} 
     WHERE lower(slug) = lower('${forum}')`);
@@ -97,10 +75,8 @@ class PostService extends BaseService {
     return this.dataBase.none(this.query);
   }
 
-  getPosts(id) {
-    this.query = `SELECT * FROM posts WHERE threadId = ${id}`;
-
-    return this.dataBase.manyOrNone(this.query);
+  getPosts(id, context = this.dataBase) {
+    return context.manyOrNone(`SELECT * FROM posts WHERE threadId = ${id}`);
   }
 }
 
