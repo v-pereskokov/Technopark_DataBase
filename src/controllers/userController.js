@@ -6,7 +6,7 @@ class UserController {
       const body = ctx.request.body;
       body.nickname = ctx.params.nickname;
 
-      userService.dataBase.task(async (task) => {
+      userService.task(async (task) => {
 
         // delete try
         try {
@@ -42,7 +42,7 @@ class UserController {
       const body = ctx.request.body;
       body.nickname = ctx.params.nickname;
 
-      userService.dataBase.task(async (task) => {
+      userService.task(async (task) => {
         const errors = await userService.checkErrors(body.nickname, body.email, task);
 
         if (errors.notfound) {

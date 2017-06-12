@@ -8,6 +8,9 @@ class ForumController {
     return new Promise(async (resolve, reject) => {
       const body = ctx.request.body;
 
+
+      // forumService.task()
+
       try {
         await forumService.create(body);
 

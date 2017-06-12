@@ -6,6 +6,10 @@ export default class BaseService {
     this._dataBase = dataBase;
   }
 
+  get task() {
+    return this.dataBase.task;
+  }
+
   get dataBase() {
     return this._dataBase;
   }

@@ -30,11 +30,11 @@ DROP TABLE IF EXISTS forumMembers CASCADE;
 SET SYNCHRONOUS_COMMIT = 'off';
 
 CREATE TABLE IF NOT EXISTS users (
-  id        SERIAL PRIMARY KEY NOT NULL,
-  about     TEXT,
-  email     CITEXT COLLATE "ucs_basic",
-  fullname  TEXT,
-  nickname  CITEXT COLLATE "ucs_basic" NOT NULL
+  id SERIAL PRIMARY KEY NOT NULL,
+  about TEXT,
+  email CITEXT COLLATE "ucs_basic",
+  fullname TEXT,
+  nickname CITEXT COLLATE "ucs_basic" NOT NULL
 );
 
 

@@ -41,6 +41,11 @@ class ForumService extends BaseService {
 
     return this.dataBase.one(this.query);
   }
+
+  checkAuthor(nickname) {
+    return this.dataBase.oneOrNone(`SELECT id, nickname FROM users WHERE
+     LOWER(nickname) = LOWER('${nickname}')`);
+  }
 }
 
 const forumService = new ForumService();
