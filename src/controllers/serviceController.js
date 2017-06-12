@@ -3,13 +3,7 @@ import serviceService from '../services/serviceService';
 class ServiceController {
   getStatus(ctx, next) {
     return new Promise(async (resolve, reject) => {
-      const status = await serviceService.getStatus();
-      ctx.body = {
-        forum: +status.forum,
-        post: +status.post,
-        thread: +status.thread,
-        user: +status.user
-      };
+      ctx.body = await serviceService.getStatus();
       ctx.status = 200;
 
       resolve();
@@ -18,10 +12,7 @@ class ServiceController {
 
   clear(ctx, next) {
     return new Promise(async (resolve, reject) => {
-      await serviceService.truncate('posts');
-      await serviceService.truncate('threads');
-      await serviceService.truncate('forums');
-      await serviceService.truncate('users');
+      await serviceService.truncate('posts', 'threads', 'forums', 'users');
 
       ctx.body = '';
       ctx.status = 200;
