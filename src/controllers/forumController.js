@@ -56,23 +56,19 @@ class ForumController {
       const forum = ctx.request.body.forum || slug;
 
       forumService.task(async (task) => {
-        // const thread = await threadService.findThreadBySlug(slug, task);
-        //
-        // if (thread) {
-        //   ctx.body = thread;
-        //   ctx.status = 409;
-        //
-        //   resolve();
-        //   return;
-        // }
+        const thread = await threadService.findThreadBySlug(slug, task);
 
-        const forumSlug = await forumService.getSlug(slug);
+        if (thread) {
+          ctx.body = thread;
+          ctx.status = 409;
 
-        console.log(forumSlug);
+          resolve();
+          return;
+        }
 
         // delete try
         try {
-          const result = await threadService.topCreate({
+          const result = await threadService.create({
             username,
             created,
             forum,
@@ -81,21 +77,13 @@ class ForumController {
             title
           }, task);
 
-          let status = null;
-          if (result.action === 'updated') {
-            status = 409;
-          } else {
-            await forumService.updateForums(forum, task);
-            status = 201;
-          }
+          await forumService.updateForums(forum, task);
 
           ctx.body = Object.assign(result, {
             slug: result.slug === result.forum ? '' : result.slug
           });
-          ctx.status = status;
+          ctx.status = 201;
         } catch(error) {
-          console.log(error);
-
           ctx.body = null;
           ctx.status = 404;
         }
@@ -114,6 +102,14 @@ class ForumController {
 
       try {
         const slugs = await forumService.getSlug(slug);
+        if (!slugs) {
+          ctx.body = null;
+          ctx.status = 404;
+
+          resolve();
+          return;
+        }
+
         const result = await threadService.getForumThreads(slugs.slug, limit, since, desc);
         const top = [];
 
@@ -129,13 +125,10 @@ class ForumController {
         ctx.body = top;
         ctx.status = 200;
       } catch (e) {
-        if (e.query.indexOf('ORDER BY') !== -1) {
-          ctx.body = [];
-          ctx.status = 200;
-        } else {
-          ctx.body = '';
-          ctx.status = 404;
-        }
+        console.log(e);
+        console.log(e);
+        ctx.body = [];
+        ctx.status = 200;
       }
 
       resolve();
