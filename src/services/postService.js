@@ -6,26 +6,37 @@ class PostService extends BaseService {
   }
 
   createAsBatch(posts, thread, context = this.dataBase) {
-    return context.tx(async (transaction) => {
-      const queries = [];
+    const cs = new this.pgp.helpers.ColumnSet([
+        'id', 'author', 'forum', 'isedited', 'message', 'parent', 'path', 'threadid'
+      ],
+      {table: 'posts'});
 
-      for (let post of posts) {
-        post.forum = thread.forum;
-        post.thread = +thread.id;
+    for (let post of posts) {
+      post.id = 'nextval(\'posts_id_seq\')';
+      post.forum = thread.forum;
+      post.threadid = +thread.id;
+      post.isedited = post.isEdited || 'FALSE';
+      post.path = `(SELECT path FROM posts WHERE id = ${post.parent ? `${post.parent}` : 'NULL'}) || 
+        currval('posts_id_seq')::BIGINT`;
+      post.parent = post.parent || 0;
+    }
 
-        queries.push(transaction.oneOrNone(this.getCreateBatchQuery(post)));
-      }
+    const query = this.pgp.helpers.insert(posts, cs) + 'RETURNING id::int, author, created, forum, isedited as "isEdited", message, parent::int, path, threadId::int as "thread"';
 
-      return await transaction.batch(queries);
-    });
+    return context.manyOrNone(query);
+    // return context.tx(async (transaction) => {
+    //   const queries = [];
+    //
+    //   return await transaction.batch(queries);
+    // });
   }
 
   getCreateBatchQuery(data) {
     this.query = `INSERT INTO posts 
     (id, author, forum, isEdited, message, parent, path, threadId) 
     VALUES (nextval('posts_id_seq'), '${data.author}', 
-    (SELECT f.slug FROM forums f WHERE lower(f.slug) = lower('${data.forum}')), 
-    ${data.isEdited ? data.isEdited : 'FALSE'}, '${data.message}', ${data.parent ? `${data.parent}` : 'NULL'}, 
+    '${data.forum}', 
+    ${data.isEdited || 'FALSE'}, '${data.message}', ${data.parent ? `${data.parent}` : 'NULL'}, 
     (SELECT path FROM posts WHERE id = ${data.parent ? `${data.parent}` : 'NULL'}) || currval('posts_id_seq')::BIGINT, 
     ${data.thread})
     RETURNING 
