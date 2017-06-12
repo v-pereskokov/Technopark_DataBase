@@ -8,4 +8,4 @@ const dataBase = new DataBase({
   port: 5432
 });
 
-export default dataBase.controller;
+export default dataBase;

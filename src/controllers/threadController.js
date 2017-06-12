@@ -41,8 +41,6 @@ class ThreadController {
         const result = await postService.createAsBatch(body, thread);
         await postService.updateForums(body.length, thread.forum);
 
-        result.
-
         ctx.body = body;
         ctx.status = 201;
 
