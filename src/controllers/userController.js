@@ -16,7 +16,7 @@ class UserController {
           ctx.status = 201;
 
           resolve();
-        } catch(error) {
+        } catch (error) {
           ctx.body = await userService.getUser(body.nickname, body.email, task);
           ctx.status = 409;
 
@@ -59,14 +59,10 @@ class UserController {
           return;
         }
 
-        try {
-          ctx.body = await userService.update(body, task);
-          ctx.status = 200;
+        ctx.body = await userService.update(body, task);
+        ctx.status = 200;
 
-          resolve();
-        } catch(e) {
-          console.log(e);
-        }
+        resolve();
       });
     });
   }
