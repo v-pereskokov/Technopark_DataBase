@@ -73,9 +73,9 @@ into
     WHERE t.slug = '${slug}'::citext`);
   }
 
-  getForumThreads(slug, limit, since, desc) {
-    this.query = `SELECT t.id, t.slug, t.author,
-    t.forum, t.created, t.message, t.title, t.votes
+  getForumThreads(slug, limit, since, desc, context = this.dataBase) {
+    this.query = `SELECT t.id::int, t.slug, t.author,
+    t.forum, t.created, t.message, t.title, t.votes::int
     FROM
     threads t
     WHERE LOWER(t.forum) = LOWER('${slug}') `;
@@ -88,7 +88,7 @@ into
 
     this.query += `ORDER BY t.created ${desc === 'true' ? 'DESC' : 'ASC '} LIMIT ${+limit}`;
 
-    return this.dataBase.many(this.query);
+    return context.any(this.query);
   }
 
   addVote(data, thread) {

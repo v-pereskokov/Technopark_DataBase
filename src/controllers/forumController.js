@@ -100,8 +100,8 @@ class ForumController {
       const since = ctx.query.since;
       const slug = ctx.params.slug;
 
-      try {
-        const slugs = await forumService.getSlug(slug);
+      forumService.task(async (task) => {
+        const slugs = await forumService.getSlug(slug, task);
         if (!slugs) {
           ctx.body = null;
           ctx.status = 404;
@@ -110,26 +110,11 @@ class ForumController {
           return;
         }
 
-        const result = await threadService.getForumThreads(slugs.slug, limit, since, desc);
-        const top = [];
-
-        if (result) {
-          for (let thread of result) {
-            top.push(Object.assign(thread, {
-              id: +thread.id,
-              votes: +thread.votes
-            }));
-          }
-        }
-
-        ctx.body = top;
+        ctx.body = await threadService.getForumThreads(slugs.slug, limit, since, desc, task);
         ctx.status = 200;
-      } catch (e) {
-        ctx.body = [];
-        ctx.status = 200;
-      }
 
-      resolve();
+        resolve();
+      });
     });
   }
 

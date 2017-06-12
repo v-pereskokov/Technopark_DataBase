@@ -40,16 +40,12 @@ class ForumService extends BaseService {
     return context.none(`UPDATE forums SET threads = threads + 1 WHERE LOWER(slug) = LOWER('${slug}')`);
   }
 
-  getSlug(slug) {
-    this.query = `SELECT slug FROM forums WHERE LOWER(slug) = LOWER('${slug}');`;
-
-    return this.dataBase.oneOrNone(this.query);
+  getSlug(slug, context = this.dataBase) {
+    return context.oneOrNone(`SELECT slug FROM forums WHERE LOWER(slug) = LOWER('${slug}');`);
   }
 
   getId(slug) {
-    this.query = `SELECT id FROM forums WHERE LOWER(slug) = LOWER('${slug}');`;
-
-    return this.dataBase.one(this.query);
+    return this.dataBase.one(`SELECT id FROM forums WHERE LOWER(slug) = LOWER('${slug}');`);
   }
 
   checkAuthor(nickname, context = this.dataBase) {
