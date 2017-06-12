@@ -125,8 +125,6 @@ class ForumController {
         ctx.body = top;
         ctx.status = 200;
       } catch (e) {
-        console.log(e);
-        console.log(e);
         ctx.body = [];
         ctx.status = 200;
       }
