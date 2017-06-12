@@ -5,34 +5,35 @@ class UserService extends BaseService {
     super();
   }
 
-  create(user) {
+  create(user, context = this.dataBase) {
     this.query = `INSERT INTO users (nickname, email, fullname, about) 
-    VALUES ('${user.nickname}', '${user.email}', '${user.fullname}', '${user.about}');`;
+    VALUES ('${user.nickname}', '${user.email}', '${user.fullname}', '${user.about}')`;
 
-    return this.dataBase.none(this.query);
+    return context.none(this.query);
   }
 
-  update(user) {
+  update(user, context = this.dataBase) {
     this.query = `UPDATE users SET 
     fullname = COALESCE(${user.fullname ? `'${user.fullname}'` : 'NULL'}, fullname), 
     email = COALESCE(${user.email ? `'${user.email}'` : 'NULL'}, email),
     about = COALESCE(${user.about ? `'${user.about}'` : 'NULL'}, about) 
-    WHERE LOWER(nickname) = LOWER('${user.nickname}')`;
+    WHERE LOWER(nickname) = LOWER('${user.nickname}') 
+    RETURNING *`;
 
-    return this.dataBase.oneOrNone(this.query);
+    return context.oneOrNone(this.query);
   }
 
-  getUser(nickname, email) {
+  getUser(nickname, email, context = this.dataBase) {
     this.query = `SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}') OR 
     LOWER(email) = LOWER('${email}');`;
 
-    return this.dataBase.many(this.query);
+    return context.many(this.query);
   }
 
   getUserByNickname(nickname) {
     this.query = `SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}');`;
 
-    return this.dataBase.one(this.query);
+    return this.dataBase.oneOrNone(this.query);
   }
 
   getUserByEmail(email) {
@@ -57,13 +58,29 @@ class UserService extends BaseService {
 
     if (data.since) {
       this.query += ` AND lower(u.nickname) ${data.desc === 'true' ? '<' : '>'} 
-      LOWER('${data.since}')`
+      LOWER('${data.since}')`;
     }
 
     this.query += ` ORDER BY LOWER(u.nickname) ${data.desc === 'true' ? 'DESC' : 'ASC'} 
     LIMIT ${data.limit}`;
 
     return this.dataBase.manyOrNone(this.query);
+  }
+
+  checkErrors(nickname, email, context = this.dataBase) {
+    this.query = `SELECT 
+      CASE WHEN (
+        SELECT id FROM users 
+        WHERE nickname <> '${nickname}' and email='${email}'
+      ) IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict", 
+      CASE WHEN (
+        SELECT id FROM users 
+        WHERE nickname='${nickname}'
+      ) IS NOT NULL THEN FALSE ELSE TRUE END AS "notfound"`;
+
+    console.log(this.query);
+
+    return context.one(this.query);
   }
 }
 

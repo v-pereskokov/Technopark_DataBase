@@ -3,68 +3,69 @@ import userService from '../services/userService';
 class UserController {
   create(ctx, next) {
     return new Promise(async (resolve, reject) => {
-      let body = ctx.request.body;
-      body['nickname'] = ctx.params.nickname;
+      const body = ctx.request.body;
+      body.nickname = ctx.params.nickname;
 
-      try {
-        await userService.create(body);
-        ctx.body = body;
-        ctx.status = 201;
+      userService.dataBase.task(async (task) => {
 
-        resolve();
-      } catch(e) {
-        ctx.body = await userService.getUser(body.nickname, body.email);
-        ctx.status = 409;
+        // delete try
+        try {
+          await userService.create(body, task);
 
-        resolve();
-      }
+          ctx.body = body;
+          ctx.status = 201;
+
+          resolve();
+        } catch(error) {
+          ctx.body = await userService.getUser(body.nickname, body.email, task);
+          ctx.status = 409;
+
+          resolve();
+        }
+      });
     });
   }
 
   get(ctx, next) {
     return new Promise(async (resolve, reject) => {
-      try {
-        ctx.body = await userService.getUserByNickname(ctx.params.nickname);
-        ctx.status = 200;
+      const user = await userService.getUserByNickname(ctx.params.nickname);
 
-        resolve();
-      } catch(e) {
-        ctx.body = '';
-        ctx.status = 404;
+      ctx.body = user;
+      ctx.status = user ? 200 : 404;
 
-        resolve();
-      }
+      resolve();
     });
   }
 
   update(ctx, next) {
     return new Promise(async (resolve, reject) => {
-      let body = ctx.request.body;
-      body['nickname'] = ctx.params.nickname;
+      const body = ctx.request.body;
+      body.nickname = ctx.params.nickname;
 
-      try {
-        await userService.update(body);
+      userService.dataBase.task(async (task) => {
+        const errors = await userService.checkErrors(body.nickname, body.email, task);
 
-        ctx.body = await userService.getUserByNickname(body.nickname);
+        console.log(errors);
+
+        if (errors.notfound) {
+          ctx.body = null;
+          ctx.status = 404;
+
+          resolve();
+          return;
+        } else if (errors.conflict) {
+          ctx.body = null;
+          ctx.status = 409;
+
+          resolve();
+          return;
+        }
+
+        ctx.body = await userService.update(body, task);
         ctx.status = 200;
 
         resolve();
-      } catch(e) {
-        switch (+e.code) {
-          case 23502:
-            ctx.body = '';
-            ctx.status = 404;
-            break;
-          case 23505:
-            ctx.body = body;
-            ctx.status = 409;
-            break;
-          default:
-            break;
-        }
-
-        resolve();
-      }
+      });
     });
   }
 }

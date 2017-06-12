@@ -1,3 +1,5 @@
+CREATE extension if NOT EXISTS "citext";
+
 DROP INDEX IF EXISTS indexUsersOnEmail;
 DROP INDEX IF EXISTS indexUsersOnNickname;
 DROP INDEX IF EXISTS indexForumOnSlug;
@@ -28,10 +30,10 @@ DROP TABLE IF EXISTS forumMembers CASCADE;
 SET SYNCHRONOUS_COMMIT = 'off';
 
 CREATE TABLE IF NOT EXISTS users (
-  id       BIGSERIAL PRIMARY KEY,
-  nickname VARCHAR(50)  NOT NULL,
+  id       BIGSERIAL    PRIMARY KEY,
+  nickname VARCHAR(50)  UNIQUE NOT NULL,
   fullname VARCHAR(100) NOT NULL,
-  email    VARCHAR(50)  NOT NULL,
+  email    VARCHAR(50)  UNIQUE NOT NULL,
   about    TEXT
 );
 
