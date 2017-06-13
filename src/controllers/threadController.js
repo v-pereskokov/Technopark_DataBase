@@ -94,67 +94,58 @@ class ThreadController {
     const sort = ctx.query.sort ? ctx.query.sort : 'flat';
     let marker = ctx.query.marker ? +ctx.query.marker : 0;
 
-    try {
-      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-        await threadService.findThreadBySlug(slugOrId);
+    const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+      await threadService.findThreadBySlug(slugOrId);
 
-      let posts = [];
-
-      switch (sort) {
-        case 'flat':
-          posts = await postService.getPostsFlatSort(+thread.id, desc, limit, marker);
-          marker += posts.length;
-          break;
-        case 'tree':
-          posts = await postService.getPostsTreeSort(+thread.id, desc, limit, marker);
-          marker += posts.length;
-          break;
-        case 'parent_tree':
-          posts = await postService.getPostsParentTreeSort(+thread.id, desc, limit, marker);
-          marker += Math.min(limit, posts.length);
-          break;
-        default:
-          break;
-      }
-
-      const result = [];
-
-      for (let post of posts) {
-        result.push(Object.assign(post, {
-          id: +post.id,
-          thread: +post.threadid,
-          parent: post.parent ? +post.parent : null
-        }));
-      }
-
-      ctx.body = {
-        marker: `${marker}`,
-        posts: result
-      };
-      ctx.status = 200;
-    } catch (e) {
-      ctx.body = '';
+    if (!thread) {
+      ctx.body = null;
       ctx.status = 404;
+
+      return;
     }
+
+    let posts = [];
+
+    switch (sort) {
+      case 'flat':
+        posts = await postService.getPostsFlatSort(+thread.id, desc, limit, marker);
+        marker += posts.length;
+        break;
+      case 'tree':
+        posts = await postService.getPostsTreeSort(+thread.id, desc, limit, marker);
+        marker += posts.length;
+        break;
+      case 'parent_tree':
+        posts = await postService.getPostsParentTreeSort(+thread.id, desc, limit, marker);
+        marker += Math.min(limit, posts.length);
+        break;
+      default:
+        break;
+    }
+
+    ctx.body = {
+      marker: `${marker}`,
+      posts
+    };
+    ctx.status = 200;
   }
 
   async updateThread(ctx, next) {
     const slugOrId = ctx.params.slug_or_id;
     const body = ctx.request.body;
 
-    try {
-      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-        await threadService.findThreadBySlug(slugOrId);
-      await threadService.updateThread(thread, ctx.request.body);
+    const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+      await threadService.findThreadBySlug(slugOrId);
 
-      ctx.body = Object.assign(thread, body, {
-        id: +thread.id
-      });
-      ctx.status = 200;
-    } catch (e) {
-      ctx.body = '';
+    if (!thread) {
+      ctx.body = null;
       ctx.status = 404;
     }
+
+    await threadService.updateThread(thread, body);
+
+    ctx.body = Object.assign(thread, body);
+    ctx.status = 200;
   }
 }
 
