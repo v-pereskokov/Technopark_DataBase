@@ -8,10 +8,9 @@ class ThreadController {
     const slugOrId = ctx.params.slug_or_id;
 
     await threadService.task(async (task) => {
-      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId, task) :
-        await threadService.findThreadBySlug(slugOrId, task);
-
       try {
+        const thread = +slugOrId ? await threadService.findThreadById(+slugOrId, task) :
+          await threadService.findThreadBySlug(slugOrId, task);
         const getPosts = await postService.getPosts(+thread.id, task);
 
         for (let post of body) {
@@ -27,10 +26,12 @@ class ThreadController {
           }
         }
 
-        const result = await postService.createAsBatch(body, thread, task);
-        await postService.updateForums(body.length, thread.forum);
-
-        ctx.body = result;
+        ctx.body = (await task.tx(transaction => {
+          return transaction.batch([
+            postService.createAsBatch(body, thread, transaction),
+            postService.updateForums(body.length, thread.forum, transaction)
+          ]);
+        }))[0];
         ctx.status = 201;
       } catch (error) {
         ctx.body = null;
@@ -43,19 +44,35 @@ class ThreadController {
     const slugOrId = ctx.params.slug_or_id;
     const body = ctx.request.body;
 
+    const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+      await threadService.findThreadBySlug(slugOrId);
+
+    if (!thread) {
+      ctx.body = null;
+      ctx.status = 404;
+
+      return;
+    }
+
     try {
-      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-        await threadService.findThreadBySlug(slugOrId);
-      await threadService.addVote(body, thread);
-
-      const votes = await threadService.getVotes(thread.id);
-
-      ctx.body = Object.assign(thread, votes, {
-        id: +thread.id
+      const votes = await threadService.dataBase.tx(transaction => {
+        return transaction.batch([
+          threadService.addVote(body, thread, transaction),
+          threadService.getVotes(thread.id, transaction)
+        ]);
       });
+
+      if (!votes[1]) {
+        ctx.body = null;
+        ctx.status = 404;
+
+        return;
+      }
+
+      ctx.body = Object.assign(thread, votes[1]);
       ctx.status = 200;
-    } catch (e) {
-      ctx.body = '';
+    } catch (error) {
+      ctx.body = null;
       ctx.status = 404;
     }
   }
@@ -63,18 +80,11 @@ class ThreadController {
   async getThread(ctx, next) {
     const slugOrId = ctx.params.slug_or_id;
 
-    try {
-      const result = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-        await threadService.findThreadBySlug(slugOrId);
+    const result = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+      await threadService.findThreadBySlug(slugOrId);
 
-      ctx.body = Object.assign(result, {
-        id: +result.id
-      });
-      ctx.status = 200;
-    } catch (e) {
-      ctx.body = '';
-      ctx.status = 404;
-    }
+    ctx.body = result;
+    ctx.status = result ? 200 : 404;
   }
 
   async getPosts(ctx, next) {
@@ -134,7 +144,7 @@ class ThreadController {
 
     try {
       const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-      await threadService.findThreadBySlug(slugOrId);
+        await threadService.findThreadBySlug(slugOrId);
       await threadService.updateThread(thread, ctx.request.body);
 
       ctx.body = Object.assign(thread, body, {

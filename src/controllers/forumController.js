@@ -43,9 +43,15 @@ class ForumController {
 
     await forumService.task(async (task) => {
       try {
-        const result = await threadService.create(ctx.request.body, slug, forum, task);
-
-        await forumService.updateForums(forum, task);
+        const result = (await task.tx(transaction => {
+          return transaction.batch([
+            threadService.create(ctx.request.body, slug, forum, transaction),
+            forumService.updateForums(forum, transaction)
+          ]);
+        }))[0];
+        // const result = await threadService.create(ctx.request.body, slug, forum, task);
+        //
+        // await forumService.updateForums(forum, task);
 
         ctx.body = Object.assign(result, {
           slug: result.slug === result.forum ? '' : result.slug,

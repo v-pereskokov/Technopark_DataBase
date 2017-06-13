@@ -24,7 +24,7 @@ class ThreadService extends BaseService {
   }
 
   findThreadById(id, context = this.dataBase) {
-    return context.oneOrNone(`SELECT t.id, t.slug, t.author, t.created, t.forum, t.message, t.title, t.votes 
+    return context.oneOrNone(`SELECT t.id::int, t.slug, t.author, t.created, t.forum, t.message, t.title, t.votes::int 
     FROM 
     threads t 
     WHERE t.id = ${id}`);
@@ -32,7 +32,7 @@ class ThreadService extends BaseService {
 
   findThreadBySlug(slug, context = this.dataBase) {
     return context.oneOrNone(`SELECT t.id::int, t.author, t.forum, 
-    t.slug, t.created, t.message, t.title, t.votes 
+    t.slug, t.created, t.message, t.title, t.votes::int 
     FROM 
     threads t 
     WHERE LOWER(t.slug) = LOWER('${slug}')`);
@@ -56,20 +56,16 @@ class ThreadService extends BaseService {
     return context.any(this.query);
   }
 
-  addVote(data, thread) {
-    this.query = `INSERT INTO votes (userId, threadId, voice) VALUES 
+  addVote(data, thread, context = this.dataBase) {
+    return context.none(`INSERT INTO votes (userId, threadId, voice) VALUES 
     ((SELECT u.id FROM users u WHERE LOWER(nickname) = LOWER('${data.nickname}')), ${thread.id}, ${data.voice}) 
     ON CONFLICT (userId, threadId) DO 
-    UPDATE SET voice = ${data.voice}`;
-
-    return this.dataBase.none(this.query);
+    UPDATE SET voice = ${data.voice}`);
   }
 
-  getVotes(id) {
-    this.query = `SELECT t.votes FROM threads t 
-    WHERE t.id = ${id}`;
-
-    return this.dataBase.one(this.query);
+  getVotes(id, context = this.dataBase) {
+    return context.oneOrNone(`SELECT t.votes::int FROM threads t 
+    WHERE t.id = ${id}`);
   }
 
   updateThread(thread, request) {
