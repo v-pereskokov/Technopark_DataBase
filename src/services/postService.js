@@ -7,14 +7,7 @@ class PostService extends BaseService {
   }
 
   createAsBatch(posts, thread, context = this.dataBase) {
-    return context.tx(transaction => {
-      for (let post of posts) {
-        post.forum = thread.forum;
-        post.thread = +thread.id;
-      }
-
-      return transaction.manyOrNone(makeInsertPostsQuery(posts));
-    });
+    return context.manyOrNone(makeInsertPostsQuery(posts, thread));
   }
 
   updateForums(size, forum, context = this.dataBase) {
