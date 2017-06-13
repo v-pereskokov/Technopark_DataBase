@@ -77,17 +77,6 @@ class ThreadService extends BaseService {
 
     return this.dataBase.none(this.query);
   }
-
-  getPostsAndUser(threadId, nickname, context = this.dataBase) {
-    return context.any(`SELECT 
-    CASE WHEN (
-      SELECT id 
-      FROM users
-      WHERE LOWER(nickname) = LOWER('${nickname}')
-    ) IS NOT NULL THEN TRUE ELSE FALSE END AS "notfound",  
-    CASE WHEN (
-      `);
-  }
 }
 
 const threadService = new ThreadService();
