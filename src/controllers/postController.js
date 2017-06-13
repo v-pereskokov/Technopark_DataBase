@@ -40,30 +40,26 @@ class PostController {
   }
 
   async update(ctx, next) {
-    const id = ctx.params.id;
     const message = ctx.request.body.message;
 
     // union
-    try {
-      const post = await postService.getPostById(id);
+    const post = await postService.getPostById(ctx.params.id);
 
-      Object.assign(post, {
-        message: message ? message : post.message,
-        isedited: message && post.message !== message,
-        id: +post.id,
-        thread: +post.threadid,
-      });
-
-      await postService.updatePost(post);
-
-      ctx.body = Object.assign(post, {
-        isEdited: post.isedited
-      });
-      ctx.status = 200;
-    } catch (e) {
-      ctx.body = '';
+    if (!post) {
+      ctx.body = null;
       ctx.status = 404;
+
+      return;
     }
+
+    post.isEdited = message && post.message !== message;
+    post.message = message || post.message;
+    post.thread = +post.threadid;
+
+    await postService.updatePost(post);
+
+    ctx.body = post;
+    ctx.status = 200;
   }
 }
 
