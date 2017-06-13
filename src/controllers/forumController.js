@@ -49,9 +49,6 @@ class ForumController {
             forumService.updateForums(forum, transaction)
           ]);
         }))[0];
-        // const result = await threadService.create(ctx.request.body, slug, forum, task);
-        //
-        // await forumService.updateForums(forum, task);
 
         ctx.body = Object.assign(result, {
           slug: result.slug === result.forum ? '' : result.slug,
