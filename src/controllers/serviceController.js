@@ -2,13 +2,9 @@ import Promise from 'bluebird';
 import serviceService from '../services/serviceService';
 
 class ServiceController {
-  getStatus(ctx, next) {
-    return new Promise(async (resolve, reject) => {
-      ctx.body = await serviceService.getStatus();
-      ctx.status = 200;
-
-      resolve();
-    });
+  async getStatus(ctx, next) {
+    ctx.body = await serviceService.getStatus();
+    ctx.status = 200;
   }
 
   clear(ctx, next) {
