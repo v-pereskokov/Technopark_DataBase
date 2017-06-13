@@ -12,7 +12,6 @@ const port = process.env.PORT || 5000;
 
 app
   .use(bodyParser())
-  .use(logger())
   .use(userRouter.routes())
   .use(forumRouter.routes())
   .use(threadRouter.routes())
