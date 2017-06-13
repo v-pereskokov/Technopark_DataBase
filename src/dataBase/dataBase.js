@@ -1,8 +1,8 @@
-const pgp = require('pg-promise')();
+const pgp = require('pg-promise');
 
 export default class DataBase {
-  constructor(connection) {
-    this._pgp = pgp;
+  constructor(options, connection) {
+    this._pgp = pgp(options);
     this._dataBaseController = this.pgp(connection);
   }
 
