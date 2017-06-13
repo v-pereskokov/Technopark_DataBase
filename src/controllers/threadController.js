@@ -1,3 +1,4 @@
+import Promise from 'bluebird';
 import postService from '../services/postService';
 import threadService from '../services/threadService';
 import getObjectFromArray from '../tools/getObjectFromArray';

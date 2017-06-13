@@ -1,3 +1,4 @@
+import Promise from 'bluebird';
 import userService from '../services/userService';
 
 class UserController {

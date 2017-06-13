@@ -1,3 +1,4 @@
+import Promise from 'bluebird';
 import serviceService from '../services/serviceService';
 
 class ServiceController {

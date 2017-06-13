@@ -5,6 +5,15 @@ class ForumService extends BaseService {
     super();
   }
 
+  create(forum, context = this.dataBase) {
+    return context.one(`INSERT INTO forums ("user", slug, title) 
+    VALUES (
+    (SELECT nickname FROM users WHERE LOWER(nickname) = LOWER('${user.user}')),
+    '${user.slug}', 
+    '${user.title}'
+    )`)
+  }
+
   create(user, context = this.dataBase) {
     return context.one(`WITH ins_result AS ( 
       INSERT INTO forums 

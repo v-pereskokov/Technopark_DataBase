@@ -1,3 +1,4 @@
+import Promise from 'bluebird';
 import postService from '../services/postService';
 import userService from '../services/userService';
 import forumService from '../services/forumService';
