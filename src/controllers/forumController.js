@@ -38,23 +38,12 @@ class ForumController {
   }
 
   async createThread(ctx, next) {
-    const username = ctx.request.body.author;
-    const created = ctx.request.body.created;
-    const title = ctx.request.body.title;
-    const message = ctx.request.body.message;
     const slug = ctx.request.body.slug || ctx.params.slug;
     const forum = ctx.request.body.forum || slug;
 
     await forumService.task(async (task) => {
       try {
-        const result = await threadService.create({
-          username,
-          created,
-          forum,
-          slug,
-          message,
-          title
-        }, task);
+        const result = await threadService.create(ctx.request.body, slug, forum, task);
 
         await forumService.updateForums(forum, task);
 
@@ -63,13 +52,10 @@ class ForumController {
         });
         ctx.status = 201;
       } catch(e) {
-        try {
-          ctx.body = await threadService.findThreadBySlug(slug, task);
-          ctx.status = 409;
-        } catch(e) {
-          ctx.body = '';
-          ctx.status = 404;
-        }
+        const isConflict = await threadService.findThreadBySlug(slug, task);
+
+        ctx.body = isConflict;
+        ctx.status = isConflict ? 409 : 404;
       }
     });
   }

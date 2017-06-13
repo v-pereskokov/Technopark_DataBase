@@ -60,14 +60,14 @@ CREATE TABLE IF NOT EXISTS threads (
   created   TIMESTAMPTZ NOT NULL,
   forum     TEXT        NOT NULL,
   message   TEXT        NOT NULL,
-  slug      TEXT        UNIQUE,
+  slug      TEXT,
   title     TEXT        NOT NULL,
   votes     INT         NOT NULL DEFAULT 0
 );
 
 
 CREATE INDEX indexThreadsOnForum ON threads (LOWER(forum));
-CREATE UNIQUE INDEX indexThreadsOnSlug ON threads (LOWER(slug));
+CREATE INDEX indexThreadsOnSlug ON threads (LOWER(slug));
 
 
 CREATE TABLE IF NOT EXISTS posts (

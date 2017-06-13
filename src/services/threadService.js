@@ -5,16 +5,12 @@ class ThreadService extends BaseService {
     super();
   }
 
-  create(data, context = this.dataBase) {
-    if (!data.username) {
-      return null;
-    }
-
+  create(data, slug, forum, context = this.dataBase) {
     return context.one(`INSERT INTO threads (author, created, forum, message, slug, title) 
-    VALUES ((SELECT nickname FROM users WHERE LOWER(nickname) = LOWER('${data.username}')), 
+    VALUES ((SELECT nickname FROM users WHERE LOWER(nickname) = LOWER('${data.author}')), 
     ${data.created ? `'${data.created}'::TIMESTAMPTZ` : 'current_timestamp'},
-    (SELECT f.slug FROM forums f WHERE LOWER(f.slug) = LOWER('${data.forum}')), 
-    '${data.message}', '${data.slug}', 
+    (SELECT f.slug FROM forums f WHERE LOWER(f.slug) = LOWER('${forum}')), 
+    '${data.message}', '${slug}', 
     '${data.title}') 
     RETURNING 
     id::int, 
@@ -35,7 +31,7 @@ class ThreadService extends BaseService {
   }
 
   findThreadBySlug(slug, context = this.dataBase) {
-    return context.one(`SELECT t.id::int, t.author, t.forum, 
+    return context.oneOrNone(`SELECT t.id::int, t.author, t.forum, 
     t.slug, t.created, t.message, t.title, t.votes 
     FROM 
     threads t 
