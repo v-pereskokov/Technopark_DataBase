@@ -140,6 +140,8 @@ class ThreadController {
     if (!thread) {
       ctx.body = null;
       ctx.status = 404;
+
+      return;
     }
 
     await threadService.updateThread(thread, body);
