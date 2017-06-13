@@ -99,7 +99,7 @@ class ForumController {
     }
 
     ctx.body = await userService.getForumMembers({
-      id: +id.id,
+      id: id.id,
       limit,
       since,
       desc

@@ -16,7 +16,7 @@ class ForumService extends BaseService {
   }
 
   get(slug) {
-    return this.dataBase.oneOrNone(`SELECT f.id, f.title, f."user", f.slug, f.posts, f.threads 
+    return this.dataBase.oneOrNone(`SELECT f.id::int, f.title, f."user", f.slug, f.posts::int, f.threads::int 
     FROM forums f 
     WHERE LOWER(f.slug) = LOWER('${slug}');`);
   }

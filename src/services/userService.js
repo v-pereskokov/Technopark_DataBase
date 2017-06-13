@@ -25,11 +25,12 @@ class UserService extends BaseService {
   }
 
   getUserByNickname(nickname) {
-    return this.dataBase.oneOrNone(`SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}');`);
+    return this.dataBase.oneOrNone(`SELECT id::int, nickname, fullname, email, about 
+     FROM users WHERE LOWER(nickname) = LOWER('${nickname}');`);
   }
 
   getForumMembers(data) {
-    this.query = `SELECT u.id, u.nickname, u.email, u.fullname, u.about 
+    this.query = `SELECT u.id::int, u.nickname, u.email, u.fullname, u.about 
     FROM users u 
     WHERE u.id IN (
     SELECT fm.userId 

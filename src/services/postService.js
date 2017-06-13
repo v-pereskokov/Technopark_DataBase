@@ -52,8 +52,8 @@ class PostService extends BaseService {
   }
 
   getPostById(id) {
-    return this.dataBase.oneOrNone(`SELECT p.id, p.forum, p.author, p.message, p.threadId, 
-    p.parent, p.created, p.isEdited 
+    return this.dataBase.oneOrNone(`SELECT p.id::int, p.forum, p.author, p.message, p.threadId, 
+    p.parent, p.created, p.isEdited as "isEdited"
     FROM posts p 
     WHERE p.id = ${id}`);
   }

@@ -8,56 +8,42 @@ class PostController {
     const id = ctx.params.id;
     const related = ctx.request.query.related;
 
-    try {
-      let post = await postService.getPostById(id);
-      post = Object.assign(post, {
-        id: +post.id,
-        isEdited: post.isedited,
-        thread: +post.threadid
-      });
+    let post = await postService.getPostById(id);
 
-      let response = {
-        post
-      };
+    if (!post) {
+      ctx.body = null;
+      ctx.status = 404;
 
-      if (related) {
-        if (related.indexOf('user') !== -1) {
-          const user = await userService.getUserByNickname(post.author);
-          response['author'] = Object.assign(user, {
-            id: +user.id
-          });
-        }
+      return;
+    }
 
-        if (related.indexOf('forum') !== -1) {
-          const forum = await forumService.get(post.forum);
-          response['forum'] = Object.assign(forum, {
-            id: +forum.id,
-            posts: +forum.posts,
-            threads: +forum.threads
-          });
-        }
+    post.thread = +post.threadid;
 
-        if (related.indexOf('thread') !== -1) {
-          const thread = await threadService.findThreadById(+post.thread);
-          response['thread'] = Object.assign(thread, {
-            id: +thread.id,
-            votes: +thread.votes
-          });
-        }
+    let response = {post};
+
+    if (related) {
+      if (related.indexOf('user') !== -1) {
+        response['author'] = await userService.getUserByNickname(post.author);
       }
 
-      ctx.body = response;
-      ctx.status = 200;
-    } catch(e) {
-      ctx.body = '';
-      ctx.status = 404;
+      if (related.indexOf('forum') !== -1) {
+        response['forum'] = await forumService.get(post.forum);
+      }
+
+      if (related.indexOf('thread') !== -1) {
+        response['thread'] = await threadService.findThreadById(+post.thread);
+      }
     }
+
+    ctx.body = response;
+    ctx.status = 200;
   }
 
   async update(ctx, next) {
     const id = ctx.params.id;
     const message = ctx.request.body.message;
 
+    // union
     try {
       const post = await postService.getPostById(id);
 
@@ -74,7 +60,7 @@ class PostController {
         isEdited: post.isedited
       });
       ctx.status = 200;
-    } catch(e) {
+    } catch (e) {
       ctx.body = '';
       ctx.status = 404;
     }
