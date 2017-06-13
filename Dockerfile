@@ -2,8 +2,6 @@ FROM ubuntu:16.04
 
 MAINTAINER Pereskokov Vladislav
 
-RUN nproc
-
 # Update packages
 RUN apt-get -y update
 
