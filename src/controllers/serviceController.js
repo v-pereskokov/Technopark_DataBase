@@ -1,4 +1,3 @@
-import Promise from 'bluebird';
 import serviceService from '../services/serviceService';
 
 class ServiceController {
@@ -7,15 +6,11 @@ class ServiceController {
     ctx.status = 200;
   }
 
-  clear(ctx, next) {
-    return new Promise(async (resolve, reject) => {
-      await serviceService.truncate('posts', 'threads', 'forums', 'users');
+  async clear(ctx, next) {
+    await serviceService.truncate('posts', 'threads', 'forums', 'users');
 
-      ctx.body = '';
-      ctx.status = 200;
-
-      resolve();
-    });
+    ctx.body = '';
+    ctx.status = 200;
   }
 }
 

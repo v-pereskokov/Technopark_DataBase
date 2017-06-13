@@ -1,70 +1,54 @@
-import Promise from 'bluebird';
 import userService from '../services/userService';
 
 class UserController {
-  create(ctx, next) {
-    return new Promise(async (resolve, reject) => {
-      const body = ctx.request.body;
-      body.nickname = ctx.params.nickname;
+  async create(ctx, next) {
+    await next;
+    const body = ctx.request.body;
+    body.nickname = ctx.params.nickname;
 
-      userService.task(async (task) => {
+    await userService.task(async (task) => {
 
-        // delete try
-        try {
-          await userService.create(body, task);
+      // delete try
+      try {
+        await userService.create(body, task);
 
-          ctx.body = body;
-          ctx.status = 201;
-
-          resolve();
-        } catch (error) {
-          ctx.body = await userService.getUser(body.nickname, body.email, task);
-          ctx.status = 409;
-
-          resolve();
-        }
-      });
+        ctx.body = body;
+        ctx.status = 201;
+      } catch (error) {
+        ctx.body = await userService.getUser(body.nickname, body.email, task);
+        ctx.status = 409;
+      }
     });
   }
 
-  get(ctx, next) {
-    return new Promise(async (resolve, reject) => {
-      const user = await userService.getUserByNickname(ctx.params.nickname);
+  async get(ctx, next) {
+    const user = await userService.getUserByNickname(ctx.params.nickname);
 
-      ctx.body = user;
-      ctx.status = user ? 200 : 404;
-
-      resolve();
-    });
+    ctx.body = user;
+    ctx.status = user ? 200 : 404;
   }
 
-  update(ctx, next) {
-    return new Promise(async (resolve, reject) => {
-      const body = ctx.request.body;
-      body.nickname = ctx.params.nickname;
+  async update(ctx, next) {
+    const body = ctx.request.body;
+    body.nickname = ctx.params.nickname;
 
-      userService.task(async (task) => {
-        const errors = await userService.checkErrors(body.nickname, body.email, task);
+    await userService.task(async (task) => {
+      const errors = await userService.checkErrors(body.nickname, body.email, task);
 
-        if (errors.notfound) {
-          ctx.body = null;
-          ctx.status = 404;
+      if (errors.notfound) {
+        ctx.body = null;
+        ctx.status = 404;
 
-          resolve();
-          return;
-        } else if (errors.conflict) {
-          ctx.body = null;
-          ctx.status = 409;
+        return;
+      } else if (errors.conflict) {
+        ctx.body = null;
+        ctx.status = 409;
 
-          resolve();
-          return;
-        }
+        return;
+      }
 
-        ctx.body = await userService.update(body, task);
-        ctx.status = 200;
-
-        resolve();
-      });
+      ctx.body = await userService.update(body, task);
+      ctx.status = 200;
     });
   }
 }
