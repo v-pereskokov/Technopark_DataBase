@@ -1,5 +1,6 @@
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
+import logger from 'koa-logger';
 import userRouter from './routes/userRoutes';
 import forumRouter from './routes/forumRoutes';
 import threadRouter from './routes/threadRoutes';
@@ -11,6 +12,7 @@ const port = process.env.PORT || 5000;
 
 app
   .use(bodyParser())
+  .use(logger())
   .use(userRouter.routes())
   .use(forumRouter.routes())
   .use(threadRouter.routes())

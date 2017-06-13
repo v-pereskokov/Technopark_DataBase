@@ -1,7 +1,6 @@
 import forumService from '../services/forumService';
 import userService from '../services/userService';
 import threadService from '../services/threadService';
-import {isEmpty} from '../tools/isEmpty';
 
 class ForumController {
   async create(ctx, next) {
@@ -17,14 +16,17 @@ class ForumController {
         return;
       }
 
-      const data = await forumService.create({
-        slug: body.slug,
-        title: body.title,
-        nickname: author.nickname
-      }, task);
-
-      ctx.body = data;
-      ctx.status = data.action === 'updated' ? 409 : 201;
+      try {
+        ctx.body = await forumService.create({
+          slug: body.slug,
+          title: body.title,
+          user: author.nickname
+        }, task);
+        ctx.status = 201;
+      } catch (error) {
+        ctx.body = await forumService.get(body.slug, task);
+        ctx.status = 409;
+      }
     });
   }
 
@@ -44,16 +46,6 @@ class ForumController {
     const forum = ctx.request.body.forum || slug;
 
     await forumService.task(async (task) => {
-      const thread = await threadService.findThreadBySlug(slug, task);
-
-      if (thread) {
-        ctx.body = thread;
-        ctx.status = 409;
-
-        return;
-      }
-
-      // delete try
       try {
         const result = await threadService.create({
           username,
@@ -67,12 +59,17 @@ class ForumController {
         await forumService.updateForums(forum, task);
 
         ctx.body = Object.assign(result, {
-          slug: result.slug === result.forum ? '' : result.slug
+          slug: result.slug === result.forum ? '' : result.slug,
         });
         ctx.status = 201;
-      } catch (error) {
-        ctx.body = null;
-        ctx.status = 404;
+      } catch(e) {
+        try {
+          ctx.body = await threadService.findThreadBySlug(slug, task);
+          ctx.status = 409;
+        } catch(e) {
+          ctx.body = '';
+          ctx.status = 404;
+        }
       }
     });
   }

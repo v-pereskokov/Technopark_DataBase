@@ -5,44 +5,13 @@ class ThreadService extends BaseService {
     super();
   }
 
-  // delete subq forum
-  topCreate(data, context = this.dataBase) {
-    return context.oneOrNone(`with inserted_result as (insert
-into
-    threads as ci
-    (author, created, forum, message, slug, title) select
-        '${data.username}',
-        ${data.created ? `'${data.created}'::TIMESTAMPTZ` : 'current_timestamp'},
-        (SELECT f.slug FROM forums f WHERE LOWER(f.slug) = LOWER('${data.forum}')),
-        '${data.message}',
-        '${data.slug}',
-        '${data.title}'
-    where
-        'inserted' = set_config('upsert.action', 'inserted', true)
-            on conflict (LOWER(slug)) do update
-        set
-            id = ci.id
-        where
-            'updated' = set_config('upsert.action', 'updated', true)
-             returning *)
-        select
-            current_setting('upsert.action') AS "action",
-            t.id::int, 
-            t.author, 
-            t.created, 
-            t.forum, 
-            t.message, 
-            t.slug, 
-            t.title, 
-            t.votes::int
-        from
-            inserted_result t;`);
-  }
-
-  // optimize created?
   create(data, context = this.dataBase) {
-    return context.oneOrNone(`INSERT INTO threads (author, created, forum, message, slug, title) 
-    VALUES ('${data.username}', 
+    if (!data.username) {
+      return null;
+    }
+
+    return context.one(`INSERT INTO threads (author, created, forum, message, slug, title) 
+    VALUES ((SELECT nickname FROM users WHERE LOWER(nickname) = LOWER('${data.username}')), 
     ${data.created ? `'${data.created}'::TIMESTAMPTZ` : 'current_timestamp'},
     (SELECT f.slug FROM forums f WHERE LOWER(f.slug) = LOWER('${data.forum}')), 
     '${data.message}', '${data.slug}', 
@@ -66,11 +35,11 @@ into
   }
 
   findThreadBySlug(slug, context = this.dataBase) {
-    return context.oneOrNone(`SELECT t.id::int, t.author, t.forum, 
+    return context.one(`SELECT t.id::int, t.author, t.forum, 
     t.slug, t.created, t.message, t.title, t.votes 
     FROM 
     threads t 
-    WHERE t.slug = '${slug}'::citext`);
+    WHERE LOWER(t.slug) = LOWER('${slug}')`);
   }
 
   getForumThreads(slug, limit, since, desc, context = this.dataBase) {
@@ -115,11 +84,6 @@ into
     WHERE id = ${+thread.id}`;
 
     return this.dataBase.none(this.query);
-
-    return `select case when (select id from "user" where
-     nickname<>'${nickname}'::citext and email='${email}'::citext)
-     is not null then true else false end as "conflict", case when (select id from "user" where
-     nickname='${nickname}'::citext) is not null then false else true end as "notfound"`;
   }
 
   getPostsAndUser(threadId, nickname, context = this.dataBase) {
@@ -127,31 +91,10 @@ into
     CASE WHEN (
       SELECT id 
       FROM users
-      WHERE nickname = '${nickname}'::citext
+      WHERE LOWER(nickname) = LOWER('${nickname}')
     ) IS NOT NULL THEN TRUE ELSE FALSE END AS "notfound",  
     CASE WHEN (
       `);
-
-
-
-
-
-
-    // return context.any(`WITH author AS (
-    //     SELECT id, nickname
-    //     FROM users
-    //     WHERE nickname = '${nickname}'::citext
-    //   ),
-    //   post AS (
-    //     SELECT id, CAST(threadId AS text) as tid
-    //     FROM posts
-    //     WHERE threadId = ${threadId}
-    //   )
-    //   SELECT id AS first, nickname AS second
-    //   FROM author
-    //   UNION ALL
-    //   SELECT id, tid
-    //   FROM post`);
   }
 }
 

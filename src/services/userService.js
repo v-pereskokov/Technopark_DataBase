@@ -51,11 +51,11 @@ class UserService extends BaseService {
     return context.one(`SELECT 
       CASE WHEN (
         SELECT id FROM users 
-        WHERE nickname <> '${nickname}'::citext AND email = '${email}'::citext
+        WHERE LOWER(nickname) <> LOWER('${nickname}') AND LOWER(email) = LOWER('${email}')
       ) IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict", 
       CASE WHEN (
         SELECT id FROM users 
-        WHERE nickname = '${nickname}'::citext) IS NOT NULL THEN FALSE ELSE TRUE END AS "notfound"`);
+        WHERE LOWER(nickname) = LOWER('${nickname}')) IS NOT NULL THEN FALSE ELSE TRUE END AS "notfound"`);
   }
 }
 

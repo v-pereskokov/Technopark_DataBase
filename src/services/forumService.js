@@ -6,37 +6,13 @@ class ForumService extends BaseService {
   }
 
   create(forum, context = this.dataBase) {
-    return context.one(`INSERT INTO forums ("user", slug, title) 
+    return context.oneOrNone(`INSERT INTO forums ("user", slug, title) 
     VALUES (
-    (SELECT nickname FROM users WHERE LOWER(nickname) = LOWER('${forum.user}')),
+    '${forum.user}',
     '${forum.slug}', 
     '${forum.title}'
-    )`)
-  }
-
-  oldCreate(user, context = this.dataBase) {
-    return context.one(`WITH ins_result AS ( 
-      INSERT INTO forums 
-        AS column_insert (slug, title, "user")  
-        SELECT 
-        '${user.slug}',
-        '${user.title}',
-        '${user.nickname}'
-        WHERE 
-        'inserted' = SET_CONFIG('upsert.action', 'inserted', true)
-            ON CONFLICT (LOWER(slug)) DO UPDATE
-        SET slug = column_insert.slug 
-        WHERE
-            'updated' = SET_CONFIG('upsert.action', 'updated', true)
-             RETURNING *
-      )
-        SELECT
-            CURRENT_SETTING('upsert.action') AS "action",
-            ins.slug,
-            ins.title,
-            ins."user"
-        from
-            ins_result ins`);
+    ) 
+    RETURNING *`);
   }
 
   get(slug) {
@@ -59,7 +35,7 @@ class ForumService extends BaseService {
 
   checkAuthor(nickname, context = this.dataBase) {
     return context.oneOrNone(`SELECT id, nickname FROM users WHERE 
-    nickname = '${nickname}'::citext`);
+    LOWER(nickname) = LOWER('${nickname}')`);
   }
 }
 
