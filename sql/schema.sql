@@ -1,5 +1,3 @@
-CREATE extension if NOT EXISTS "citext";
-
 DROP INDEX IF EXISTS indexUsersOnEmail;
 DROP INDEX IF EXISTS indexUsersOnNickname;
 DROP INDEX IF EXISTS indexForumOnSlug;
@@ -30,11 +28,11 @@ DROP TABLE IF EXISTS forumMembers CASCADE;
 SET SYNCHRONOUS_COMMIT = 'off';
 
 CREATE TABLE IF NOT EXISTS users (
-  id SERIAL PRIMARY KEY NOT NULL,
-  about TEXT,
-  email CITEXT COLLATE "ucs_basic",
-  fullname TEXT,
-  nickname CITEXT COLLATE "ucs_basic" NOT NULL
+  id       BIGSERIAL    PRIMARY KEY,
+  nickname VARCHAR(50)  NOT NULL,
+  fullname VARCHAR(100) NOT NULL,
+  email    VARCHAR(50)  NOT NULL,
+  about    TEXT
 );
 
 
@@ -45,10 +43,10 @@ CREATE UNIQUE INDEX indexUsersOnEmail ON users (LOWER(email));
 CREATE TABLE IF NOT EXISTS forums (
   id      BIGSERIAL     PRIMARY KEY,
   posts   INT           NOT NULL DEFAULT 0,
-  slug    CITEXT COLLATE "ucs_basic" NOT NULL,
+  slug    TEXT          NOT NULL,
   threads INT           NOT NULL DEFAULT 0,
   title   TEXT          NOT NULL,
-  "user"  CITEXT COLLATE "ucs_basic" NOT NULL
+  "user"  TEXT          NOT NULL
 );
 
 
@@ -62,13 +60,13 @@ CREATE TABLE IF NOT EXISTS threads (
   created   TIMESTAMPTZ NOT NULL,
   forum     TEXT        NOT NULL,
   message   TEXT        NOT NULL,
-  slug      CITEXT COLLATE "ucs_basic",
+  slug      TEXT        UNIQUE,
   title     TEXT        NOT NULL,
   votes     INT         NOT NULL DEFAULT 0
 );
 
 
-CREATE INDEX indexThreadsOnForum ON threads (lower(forum));
+CREATE INDEX indexThreadsOnForum ON threads (LOWER(forum));
 CREATE UNIQUE INDEX indexThreadsOnSlug ON threads (LOWER(slug));
 
 
@@ -77,7 +75,7 @@ CREATE TABLE IF NOT EXISTS posts (
   author    TEXT        NOT NULL,
   created   TIMESTAMP   WITH TIME ZONE DEFAULT current_timestamp,
   forum     TEXT        NOT NULL,
-  isEdited BOOLEAN     DEFAULT FALSE,
+  isEdited  BOOLEAN     DEFAULT FALSE,
   message   TEXT,
   parent    BIGINT,
   path      BIGINT []   NOT NULL,
