@@ -7,35 +7,37 @@ class ThreadController {
     const body = ctx.request.body;
     const slugOrId = ctx.params.slug_or_id;
 
-    try {
-      const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
-        await threadService.findThreadBySlug(slugOrId);
-      const getPosts = await postService.getPosts(+thread.id);
+    await threadService.task(async (task) => {
+      try {
+        const thread = +slugOrId ? await threadService.findThreadById(+slugOrId, task) :
+          await threadService.findThreadBySlug(slugOrId, task);
+        const getPosts = await postService.getPosts(+thread.id, task);
 
-      for (let post of body) {
-        if (post.parent && +post.parent !== 0) {
-          const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
+        for (let post of body) {
+          if (post.parent && +post.parent !== 0) {
+            const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
 
-          if (!parentPost || +parentPost.threadid !== +thread.id) {
-            ctx.body = '';
-            ctx.status = 409;
+            if (!parentPost || +parentPost.threadid !== +thread.id) {
+              ctx.body = '';
+              ctx.status = 409;
 
-            return;
+              return;
+            }
           }
         }
-      }
 
-      ctx.body = (await postService.dataBase.tx(transaction => {
-        return transaction.batch([
-          postService.createAsBatch(body, thread, transaction),
-          postService.updateForums(body.length, thread.forum, transaction)
-        ]);
-      }))[0];
-      ctx.status = 201;
-    } catch (error) {
-      ctx.body = null;
-      ctx.status = 404;
-    }
+        ctx.body = (await task.tx(transaction => {
+          return transaction.batch([
+            postService.createAsBatch(body, thread, transaction),
+            postService.updateForums(body.length, thread.forum, transaction)
+          ]);
+        }))[0];
+        ctx.status = 201;
+      } catch (error) {
+        ctx.body = null;
+        ctx.status = 404;
+      }
+    });
   }
 
   async createVote(ctx, next) {
