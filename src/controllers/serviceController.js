@@ -1,33 +1,40 @@
 import serviceService from '../services/serviceService';
 
 class ServiceController {
-  getStatus(ctx, next) {
-    return new Promise(async (resolve, reject) => {
-      const status = await serviceService.getStatus();
-      ctx.body = {
-        forum: +status.forum,
-        post: +status.post,
-        thread: +status.thread,
-        user: +status.user
-      };
-      ctx.status = 200;
+  async getStatus(ctx, next) {
+    let resp = {};
 
-      resolve();
-    });
+    return serviceService.dataBase.tx( t => {
+      let q1 = t.one('select count(*) from users');
+      let q2 = t.one('select count(*) from threads');
+      let q3 = t.one('select count(*) from posts');
+      let q4 = t.one('select count(*) from forums');
+      return t.batch([q1, q2, q3, q4]);
+    })
+      .then( data => {
+        resp.user = parseInt(data[0].count);
+        resp.thread = parseInt(data[1].count);
+        resp.post = parseInt(data[2].count);
+        resp.forum = parseInt(data[3].count);
+        ctx.body = resp;
+        ctx.status = 200;
+      })
+      .catch( err => {
+        ctx.body = null;
+        ctx.status = 404;
+      });
   }
 
-  clear(ctx, next) {
-    return new Promise(async (resolve, reject) => {
-      await serviceService.truncate('posts');
-      await serviceService.truncate('threads');
-      await serviceService.truncate('forums');
-      await serviceService.truncate('users');
-
-      ctx.body = '';
-      ctx.status = 200;
-
-      resolve();
-    });
+  async clear(ctx, next) {
+    return serviceService.dataBase.none('truncate users cascade')
+      .then( () => {
+        ctx.body = null;
+        ctx.status = 200;
+      })
+      .catch( err => {
+        ctx.body = null;
+        ctx.status = 404;
+      });
   }
 }
 

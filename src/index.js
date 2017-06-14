@@ -1,5 +1,6 @@
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
+import logger from 'koa-logger';
 import userRouter from './routes/userRoutes';
 import forumRouter from './routes/forumRoutes';
 import threadRouter from './routes/threadRoutes';

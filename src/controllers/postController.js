@@ -3,94 +3,136 @@ import userService from '../services/userService';
 import forumService from '../services/forumService';
 import threadService from '../services/threadService';
 
+function isEmpty(obj) {
+  for (let key in obj) {
+    return false;
+  }
+  return true;
+}
+
 class PostController {
-  get(ctx, next) {
-    return new Promise(async (resolve, reject) => {
-      const id = ctx.params.id;
-      const related = ctx.request.query.related;
+  async get(ctx, next) {
+    const id = ctx.params.id;
+    const related = ctx.request.query.related;
+    let response = {};
 
-      try {
-        let post = await postService.getPostById(id);
-        post = Object.assign(post, {
-          id: +post.id,
-          isEdited: post.isedited,
-          thread: +post.threadid
-        });
+    const post = await postService.getPost(id);
 
-        let response = {
-          post
-        };
+    if (!post) {
+      ctx.body = null;
+      ctx.status = 404;
 
-        if (related) {
-          if (related.indexOf('user') !== -1) {
-            const user = await userService.getUserByNickname(post.author);
-            response['author'] = Object.assign(user, {
-              id: +user.id
-            });
-          }
+      return;
+    }
 
-          if (related.indexOf('forum') !== -1) {
-            const forum = await forumService.get(post.forum);
-            response['forum'] = Object.assign(forum, {
-              id: +forum.id,
-              posts: +forum.posts,
-              threads: +forum.threads
-            });
-          }
+    response['post'] = post;
 
-          if (related.indexOf('thread') !== -1) {
-            const thread = await threadService.findThreadById(+post.thread);
-            response['thread'] = Object.assign(thread, {
-              id: +thread.id,
-              votes: +thread.votes
-            });
-          }
+    let checker = {
+      user: -1,
+      thread: -1,
+      forum: -1
+    };
+
+    const posts = await postService.transaction(transaction => {
+      const queries = [];
+      let index = 0;
+
+      if (related) {
+        if (related.indexOf('user') !== -1) {
+          queries.push(userService.getUserByNicknameNL(post.author, transaction));
+
+          checker.user = index;
+          ++index;
         }
 
-        ctx.body = response;
-        ctx.status = 200;
+        if (related.indexOf('thread') !== -1) {
+          queries.push(threadService.getThread(post.thread, transaction));
 
-        resolve();
-      } catch(e) {
-        ctx.body = '';
-        ctx.status = 404;
+          checker.thread = index;
+          ++index;
+        }
 
-        resolve();
+        if (related.indexOf('forum') !== -1) {
+          queries.push(forumService.getBySlug(post.forum, transaction));
+
+          checker.forum = index;
+          ++index;
+        }
       }
+
+      return transaction.batch(queries);
     });
+
+    if (checker.user !== -1) {
+      response.author = posts[checker.user];
+    }
+
+    if (checker.thread !== -1) {
+      response.thread = posts[checker.thread];
+    }
+
+    if (checker.forum !== -1) {
+      response.forum = posts[checker.forum];
+    }
+
+    ctx.body = response;
+    ctx.status = 200;
   }
 
-  update(ctx, next) {
-    return new Promise(async (resolve, reject) => {
-      const id = ctx.params.id;
-      const message = ctx.request.body.message;
+  async update(ctx, next) {
+    // const message = ctx.request.body.message;
+    //
+    // // union
+    // const post = await postService.getPostById(ctx.params.id);
+    //
+    // if (!post) {
+    //   ctx.body = null;
+    //   ctx.status = 404;
+    //
+    //   return;
+    // }
+    //
+    // post.isEdited = message && post.message !== message;
+    // post.message = message || post.message;
+    // post.thread = +post.threadid;
+    //
+    // await postService.updatePost(post);
+    //
+    // ctx.body = post;
+    // ctx.status = 200;
 
-      try {
-        const post = await postService.getPostById(id);
+    let id = ctx.params.id;
+    let message = ctx.request.body.message;
 
-        Object.assign(post, {
-          message: message ? message : post.message,
-          isedited: message && post.message !== message,
-          id: +post.id,
-          thread: +post.threadid,
-        });
+    try {
+      const posts = await postService.dataBase.one('select isEdited as \"isEdited\", author, created, forum, id, thread, message from posts where id = $1', id);
 
-        await postService.updatePost(post);
+      if (!isEmpty(message) && (message !== posts.message)) {
+        try {
+          const data = await postService.dataBase.tx(t => {
+            let q1 = t.none('update posts set (message, isEdited) = (\'' + message + '\', true) where id = $1', id);
+            let q2 = t.one('select isEdited as \"isEdited\", author, created, forum, id, thread, message from posts where id = $1', id);
+            return t.batch([q1, q2]);
+          });
 
-        ctx.body = Object.assign(post, {
-          isEdited: post.isedited
-        });
+          let d = JSON.stringify(data[1]);
+          d = JSON.parse(d);
+          ctx.body = d;
+          ctx.status = 200;
+        } catch (error) {
+          ctx.body = null;
+          ctx.status = 404;
+        }
+      } else {
+        let d = JSON.stringify(posts);
+        d = JSON.parse(d);
+        ctx.body = d;
         ctx.status = 200;
-
-        resolve();
-      } catch(e) {
-        console.log(e);
-        ctx.body = '';
-        ctx.status = 404;
-
-        resolve();
       }
-    });
+    } catch (error) {
+      ctx.body = null;
+      ctx.status = 404;
+    }
   }
 }
 

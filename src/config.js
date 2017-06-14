@@ -1,6 +1,9 @@
 import DataBase from './dataBase/dataBase';
+import bbPromise from 'bluebird';
 
 const dataBase = new DataBase({
+  promiseLib: bbPromise
+}, {
   user: 'docker',
   database: 'docker',
   password: 'docker',
@@ -8,4 +11,4 @@ const dataBase = new DataBase({
   port: 5432
 });
 
-export default dataBase.controller;
+export default dataBase;

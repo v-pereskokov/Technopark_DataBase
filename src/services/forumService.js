@@ -5,41 +5,71 @@ class ForumService extends BaseService {
     super();
   }
 
-  create(user) {
-    this.query = `INSERT INTO forums ("user", slug, title) 
+  create(username, forum, context = this.dataBase) {
+    return context.oneOrNone(`INSERT INTO forums (username, slug, title) 
     VALUES (
-    (SELECT nickname FROM users WHERE LOWER(nickname) = LOWER('${user.user}')),
-    '${user.slug}', 
-    '${user.title}'
-    );`;
-
-    return this.dataBase.none(this.query);
+    '${username}',
+    '${forum.slug}', 
+    '${forum.title}'
+    )`);
   }
 
-  get(slug) {
-    this.query = `SELECT f.id, f.title, f."user", f.slug, f.posts, f.threads 
-    FROM forums f 
-    WHERE LOWER(f.slug) = LOWER('${slug}');`;
-
-    return this.dataBase.one(this.query);
+  get(username, slug, context = this.dataBase) {
+    return context.oneOrNone(`SELECT title, username as "user", slug, posts, threads  
+    FROM forums 
+    WHERE username = '${username}' AND slug = '${slug}'`);
   }
 
-  updateForums(slug) {
-    this.query = `UPDATE forums SET threads = threads + 1 WHERE LOWER(slug) = LOWER('${slug}')`;
-
-    return this.dataBase.none(this.query);
+  updateForums(id, context = this.dataBase) {
+    return context.none(`UPDATE forums SET threads = threads + 1 
+    WHERE id = ${id}`);
   }
 
-  getSlug(slug) {
-    this.query = `SELECT slug FROM forums WHERE LOWER(slug) = LOWER('${slug}');`;
-
-    return this.dataBase.one(this.query);
+  getBySlug(slug, context = this.dataBase) {
+    return context.oneOrNone(`SELECT title, username as "user", slug, posts, threads  
+    FROM forums 
+    WHERE slug = '${slug}'`);
   }
 
-  getId(slug) {
-    this.query = `SELECT id FROM forums WHERE LOWER(slug) = LOWER('${slug}');`;
+  getId(slug, context = this.dataBase) {
+    return context.oneOrNone(`SELECT id FROM forums 
+    WHERE slug = '${slug}'`);
+  }
 
-    return this.dataBase.one(this.query);
+  getThread(slug) {
+    return this.dataBase.oneOrNone(`SELECT t.id, t.author, t.message, t.title, t.slug, t.created, f.slug as "forum" 
+    FROM threads t 
+    INNER JOIN forums f ON(t.forum = f.id) 
+    WHERE t.slug = '${slug}'`);
+  }
+
+  getThreadById(id) {
+    return this.dataBase.oneOrNone(`SELECT t.id, t.author, t.message, t.title, t.slug, t.created, f.slug as "forum" 
+    FROM threads t 
+    INNER JOIN forums f ON(t.forum = f.id) 
+    WHERE t.id = '${id}'`);
+  }
+
+  checkAuthor(nickname, context = this.dataBase) {
+    return context.oneOrNone(`SELECT id, nickname FROM users 
+    WHERE LOWER(nickname) = LOWER('${nickname}')`);
+  }
+
+  insertUF(data, context = this.dataBase) {
+    return context.none(`INSERT INTO usersForums 
+    VALUES ('${data.user}', '${data.id}')`);
+  }
+
+  getAllForum(slug) {
+    return this.dataBase.oneOrNone(`SELECT *
+    FROM forums 
+    WHERE slug = '${slug}'`);
+  }
+
+  getForumId(slug) {
+    return this.dataBase.oneOrNone(`SELECT id 
+    FROM forums 
+    WHERE slug = '${slug}'`);
   }
 }
 
