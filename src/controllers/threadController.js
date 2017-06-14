@@ -145,17 +145,17 @@ class ThreadController {
       query = 'threads.slug';
     }
 
-    return threadService.dataBase.one('select forums.slug as forum, threads.author, threads.created, threads.title, threads.slug, ' +
-      ' threads.message, threads.id, threads.votes' +
-      ' from threads inner join forums on (threads.forum = forums.id) where ' + query + ' = $1', slug)
-      .then(data => {
-        ctx.body = data;
-        ctx.status = 200;
-      })
-      .catch(err => {
-        ctx.body = null;
-        ctx.status = 404;
-      });
+    const thread = await threadService.getthreads(query, slug);
+
+    if (!thread) {
+      ctx.body = null;
+      ctx.status = 404;
+
+      return;
+    }
+
+    ctx.body = thread;
+    ctx.status = 200;
   }
 
   async getPosts(ctx, next) {

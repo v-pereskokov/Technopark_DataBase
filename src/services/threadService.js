@@ -137,6 +137,12 @@ class ThreadService extends BaseService {
   updateforums(length, forumSlug, context = this.dataBase) {
     return context.none('update forums set (posts) = (posts + ' + length + ') where forums.slug = $1', forumSlug)
   }
+
+  getthreads(query, slug) {
+    return this.dataBase.oneOrNone('select forums.slug as forum, threads.author, threads.created, threads.title, threads.slug, ' +
+      ' threads.message, threads.id, threads.votes' +
+      ' from threads inner join forums on (threads.forum = forums.id) where ' + query + ' = $1', slug)
+  }
 }
 
 const threadService = new ThreadService();
