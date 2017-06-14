@@ -1,5 +1,4 @@
 import BaseService from './baseService';
-import makeInsertPostsQuery from '../tools/makeInsertPostsQuery';
 
 class ThreadService extends BaseService {
   constructor() {
@@ -26,13 +25,59 @@ class ThreadService extends BaseService {
     WHERE t.id = ${id}`);
   }
 
-  getThreadForAdd(slug) {
-    const isNum = !!(+slug);
+  findThreadById(id, context = this.dataBase) {
+    return context.oneOrNone(`SELECT t.id::int, t.slug, t.author, t.created, t.forum, t.message, t.title, t.votes::int 
+    FROM 
+    threads t 
+    WHERE t.id = ${id}`);
+  }
 
-    return this.dataBase.oneOrNone(`SELECT t.id, f.slug, f.id as \"forumId\" 
-    FROM threads t 
-    INNER JOIN forums f ON (t.forum = f.id) 
-    WHERE t.${isNum ? 'id' : 'slug'} = ${isNum ? +slug : slug}`);
+  findThreadBySlug(slug, context = this.dataBase) {
+    return context.oneOrNone(`SELECT t.id::int, t.author, t.forum, 
+    t.slug, t.created, t.message, t.title, t.votes::int 
+    FROM 
+    threads t 
+    WHERE LOWER(t.slug) = LOWER('${slug}')`);
+  }
+
+  getForumThreads(slug, limit, since, desc, context = this.dataBase) {
+    this.query = `SELECT t.id::int, t.slug, t.author,
+    t.forum, t.created, t.message, t.title, t.votes::int
+    FROM
+    threads t
+    WHERE LOWER(t.forum) = LOWER('${slug}') `;
+
+    if (since) {
+      this.query += 'AND t.created';
+      this.query += desc === 'true' ? ` <= ` : ` >= `;
+      this.query += `'${since}'::TIMESTAMPTZ `;
+    }
+
+    this.query += `ORDER BY t.created ${desc === 'true' ? 'DESC' : 'ASC '} LIMIT ${+limit}`;
+
+    return context.any(this.query);
+  }
+
+  addVote(data, thread, context = this.dataBase) {
+    return context.none(`INSERT INTO votes (userId, threadId, voice) VALUES 
+    ((SELECT u.id FROM users u WHERE LOWER(nickname) = LOWER('${data.nickname}')), ${thread.id}, ${data.voice}) 
+    ON CONFLICT (userId, threadId) DO 
+    UPDATE SET voice = ${data.voice}`);
+  }
+
+  getVotes(id, context = this.dataBase) {
+    return context.oneOrNone(`SELECT t.votes::int FROM threads t 
+    WHERE t.id = ${id}`);
+  }
+
+  updateThread(thread, request) {
+    this.query = `UPDATE threads 
+    SET 
+    message = '${request.message ? request.message : thread.message}', 
+    title = '${request.title ? request.title : thread.title}' 
+    WHERE id = ${+thread.id}`;
+
+    return this.dataBase.none(this.query);
   }
 
   getSortedThreads(id, desc, since, limit) {
@@ -74,51 +119,6 @@ class ThreadService extends BaseService {
     }
 
     return this.dataBase.any(this.query)
-  }
-
-  getVote(nickname, id) {
-    return this.dataBase.one(`SELECT id, voice 
-    FROM votes 
-    WHERE username = '${nickname}' and thread = ${id}`);
-  }
-
-  createVote(nickname, voice, id, context = this.dataBase) {
-    return context.none(`INSERT INTO votes (username, voice, thread) 
-    VALUES ('${nickname}', ${voice}, ${id})`);
-  }
-
-  updateThreads(id, voice, context = this.dataBase) {
-    return context.none(`UPDATE threads 
-    SET votes = votes + ${voice} 
-    WHERE id = ${id}`);
-  }
-
-  updateVotes(id, voice, context = this.dataBase) {
-    return context.none(`UPDATE votes 
-    SET voice = ${voice} 
-    WHERE id = ${id}`);
-  }
-
-  getthread(query, slug) {
-    return this.dataBase.one('select threads.id, forums.slug, forums.id as \"forumId\" from threads inner join forums on threads.forum = forums.id ' +
-      ' where ' + query + ' = $1', slug);
-  }
-
-  getpost(parent, threadId, context = this.dataBase) {
-    return context.one('select path, id from posts where id = ' + parent + ' and thread = ' + threadId);
-  }
-
-  getnext(length, context = this.dataBase) {
-    return context.any('SELECT nextval(\'posts_id_seq\') from generate_series(1, $1)', length);
-  }
-
-  updateforums(length, forumSlug, context = this.dataBase) {
-    return context.none('update forums set (posts) = (posts + ' + length + ') where forums.slug = $1', forumSlug);
-  }
-
-  addPosts(posts, forumId, context = this.dataBase) {
-    const request = makeInsertPostsQuery(posts, forumId);
-    return context.none(request.query, request.creat);
   }
 }
 

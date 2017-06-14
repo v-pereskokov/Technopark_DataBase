@@ -6,37 +6,66 @@ class PostService extends BaseService {
     super();
   }
 
-  addPosts(id, data, context = this.dataBase) {
-    return context.none(makeInsertPostsQuery(id, data));
-  }
-
-  getPost(id, context = this.dataBase) {
-    return context.oneOrNone(`SELECT id, author, created, forum, isEdited as "isEdited", message, thread, parent 
+  getPost(id) {
+    return this.dataBase.oneOrNone(`SELECT id, author, created, forum, isEdited as "isEdited", message, thread, parent 
     FROM posts 
     WHERE id = ${id}`);
   }
 
-  getPostOne(id, context = this.dataBase) {
-    return context.one(`SELECT id, author, created, forum, isEdited as "isEdited", message, thread, parent 
-    FROM posts 
-    WHERE id = ${id}`);
+  createAsBatch(posts, thread, context = this.dataBase) {
+    return context.manyOrNone(makeInsertPostsQuery(posts, thread));
   }
 
-  update(id, message, context = this.dataBase) {
-    return context.none(`UPDATE posts 
-    SET (message, isEdited) = 
-    ('${message}', TRUE)  
-    WHERE id = ${id}`);
+  updateForums(size, forum, context = this.dataBase) {
+    return context.none(`UPDATE forums SET posts = posts + ${size} 
+    WHERE lower(slug) = lower('${forum}')`);
   }
 
-  getPath(id, parent, context = this.dataBase) {
-    return context.one(`SELECT path, id 
-    FROM posts 
-    WHERE id = parent AND thread = id`);
+  getPostsFlatSort(id, desc, limit, offset) {
+    return this.dataBase.manyOrNone(`SELECT p.id::int, p.author, p.forum, p.created, p.message, p.threadId::int as thread, p.parent::int, p.isEdited 
+    FROM posts p 
+    WHERE p.threadId = ${id} 
+    ORDER BY p.id ${desc === 'true' ? 'DESC' : 'ASC'} 
+    LIMIT ${limit} OFFSET ${offset}`);
   }
 
-  getNextVal(length, context = this.dataBase) {
-    return context.any(`SELECT nextval(\'posts_id_seq\') from generate_series(1, ${length})`);
+  getPostsTreeSort(id, desc, limit, offset) {
+    return this.dataBase.manyOrNone(`SELECT p.id::int, p.author, p.forum, p.created, p.message, p.threadId::int as thread, p.parent::int, p.isEdited 
+    FROM posts p 
+    WHERE p.threadId = ${id} 
+    ORDER BY p.path ${desc === 'true' ? 'DESC' : 'ASC'} 
+    LIMIT ${limit} OFFSET ${offset}`);
+  }
+
+  getPostsParentTreeSort(id, desc, limit, offset) {
+    return this.dataBase.manyOrNone(`WITH sub AS (
+    SELECT path FROM posts 
+    WHERE parent IS NULL AND threadId = ${id} 
+    ORDER BY path ${desc === 'true' ? 'DESC' : 'ASC'} 
+    LIMIT ${limit} OFFSET ${offset} 
+    ) 
+    SELECT p.id::int, p.author, p.forum, p.created, p.message, p.threadId::int as thread, p.parent::int, p.isEdited 
+    FROM posts p 
+    JOIN sub ON sub.path <@ p.path 
+    ORDER BY p.path ${desc === 'true' ? 'DESC' : 'ASC'}`);
+  }
+
+  getPostById(id) {
+    return this.dataBase.oneOrNone(`SELECT p.id::int, p.forum, p.author, p.message, p.threadId, 
+    p.parent, p.created, p.isEdited as "isEdited"
+    FROM posts p 
+    WHERE p.id = ${id}`);
+  }
+
+  updatePost(post) {
+    return this.dataBase.none(`UPDATE posts SET 
+    message = '${post.message}', 
+    isEdited = ${post.isEdited ? post.isEdited : false} 
+    WHERE id = ${post.id}`);
+  }
+
+  getPosts(id, context = this.dataBase) {
+    return context.manyOrNone(`SELECT * FROM posts WHERE threadId = ${id}`);
   }
 }
 

@@ -25,12 +25,6 @@ class ForumService extends BaseService {
     WHERE id = ${id}`);
   }
 
-  updateForumsPosts(slug, length, context = this.dataBase) {
-    return context.none(`UPDATE forums 
-    SET posts = posts + ${length} 
-    WHERE slug = '${slug}'`);
-  }
-
   getBySlug(slug, context = this.dataBase) {
     return context.oneOrNone(`SELECT title, username as "user", slug, posts, threads  
     FROM forums 

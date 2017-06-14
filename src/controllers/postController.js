@@ -80,27 +80,53 @@ class PostController {
   }
 
   async update(ctx, next) {
+    // const message = ctx.request.body.message;
+    //
+    // // union
+    // const post = await postService.getPostById(ctx.params.id);
+    //
+    // if (!post) {
+    //   ctx.body = null;
+    //   ctx.status = 404;
+    //
+    //   return;
+    // }
+    //
+    // post.isEdited = message && post.message !== message;
+    // post.message = message || post.message;
+    // post.thread = +post.threadid;
+    //
+    // await postService.updatePost(post);
+    //
+    // ctx.body = post;
+    // ctx.status = 200;
+
     let id = ctx.params.id;
     let message = ctx.request.body.message;
 
     try {
-      const posts = await postService.getPost(id);
+      const posts = await postService.dataBase.one('select isEdited as \"isEdited\", author, created, forum, id, thread, message from posts where id = $1', id);
 
-      if (message && message !== posts.message) {
+      if (!isEmpty(message) && (message !== posts.message)) {
         try {
-          ctx.body = (await postService.transaction(transaction => {
-            const update = postService.update(id, message, transaction);
-            const select = postService.getPostOne(id, transaction);
+          const data = await postService.dataBase.tx(t => {
+            let q1 = t.none('update posts set (message, isEdited) = (\'' + message + '\', true) where id = $1', id);
+            let q2 = t.one('select isEdited as \"isEdited\", author, created, forum, id, thread, message from posts where id = $1', id);
+            return t.batch([q1, q2]);
+          });
 
-            return transaction.batch([update, select]);
-          }))[1];
+          let d = JSON.stringify(data[1]);
+          d = JSON.parse(d);
+          ctx.body = d;
           ctx.status = 200;
         } catch (error) {
           ctx.body = null;
           ctx.status = 404;
         }
       } else {
-        ctx.body = posts;
+        let d = JSON.stringify(posts);
+        d = JSON.parse(d);
+        ctx.body = d;
         ctx.status = 200;
       }
     } catch (error) {

@@ -1,7 +1,6 @@
 import postService from '../services/postService';
 import threadService from '../services/threadService';
-import forumService from '../services/forumService';
-import makeInsertPostsQuery from '../tools/makeInsertPostsQuery';
+import getObjectFromArray from '../tools/getObjectFromArray';
 
 function isNumeric(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
@@ -16,6 +15,41 @@ function isEmpty(obj) {
 
 class ThreadController {
   async create(ctx, next) {
+    // const body = ctx.request.body;
+    // const slugOrId = ctx.params.slug_or_id;
+    //
+    // await threadService.task(async (task) => {
+    //   try {
+    //     const thread = +slugOrId ? await threadService.findThreadById(+slugOrId, task) :
+    //       await threadService.findThreadBySlug(slugOrId, task);
+    //     const getPosts = await postService.getPosts(+thread.id, task);
+    //
+    //     for (let post of body) {
+    //       if (post.parent && +post.parent !== 0) {
+    //         const parentPost = getObjectFromArray(getPosts, 'id', post.parent);
+    //
+    //         if (!parentPost || +parentPost.threadid !== +thread.id) {
+    //           ctx.body = '';
+    //           ctx.status = 409;
+    //
+    //           return;
+    //         }
+    //       }
+    //     }
+    //
+    //     ctx.body = (await task.tx(transaction => {
+    //       return transaction.batch([
+    //         postService.createAsBatch(body, thread, transaction),
+    //         postService.updateForums(body.length, thread.forum, transaction)
+    //       ]);
+    //     }))[0];
+    //     ctx.status = 201;
+    //   } catch (error) {
+    //     ctx.body = null;
+    //     ctx.status = 404;
+    //   }
+    // });
+
     let slug = ctx.params.slug_or_id;
     let posts = ctx.request.body;
     let forumSlug = 0;
@@ -70,13 +104,40 @@ class ThreadController {
 
         try {
           await threadService.dataBase.tx(t => {
-            const request = makeInsertPostsQuery(posts, forumId);
-            let q1 = t.none(request.query, request.create);
+            let creat = [];
+            let query = ' INSERT INTO posts (id, author, message, parent, thread, forum, created, path) VALUES';
+            for (let i = 0; i < posts.length; i += 1) {
+              query += ' (' + posts[i].id + ',\'' + posts[i].author + '\',\'' + posts[i].message + '\',' +
+                posts[i].parent + ',' + posts[i].thread + ',\'' + posts[i].forum + '\', $' + parseInt(i + 1) + ','
+                + ' array_append(ARRAY[';
+              if (posts[i].path.length > 0) {
+                query += posts[i].path[0];
+              }
+              for (let j = 1; j < posts[i].path.length; j += 1) {
+                query += ',' + posts[i].path[j];
+              }
+              query += ']::integer[], ' + posts[i].id + '))';
+              if (i < posts.length - 1) {
+                query += ',';
+              }
+              creat.push(posts[i].created);
+            }
+            query += ';';
+            query += 'insert into usersForums values';
+            for (let i = 0; i < posts.length; i += 1) {
+              query += ' (\'' + posts[i].author + '\',' + forumId + ')';
+              if (i < posts.length - 1) {
+                query += ',';
+              }
+            }
+            let q1 = t.none(query, creat);
             let q2 = t.none('update forums set (posts) = (posts + ' + posts.length + ') where forums.slug = $1', forumSlug);
             return t.batch([q1, q2]);
           });
 
-          ctx.body = posts;
+          let d = JSON.stringify(posts);
+          d = JSON.parse(d);
+          ctx.body = d;
           ctx.status = 201;
         } catch (error) {
           ctx.body = null;
@@ -95,6 +156,41 @@ class ThreadController {
   }
 
   async createVote(ctx, next) {
+    // const slugOrId = ctx.params.slug_or_id;
+    // const body = ctx.request.body;
+    //
+    // const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+    //   await threadService.findThreadBySlug(slugOrId);
+    //
+    // if (!thread) {
+    //   ctx.body = null;
+    //   ctx.status = 404;
+    //
+    //   return;
+    // }
+    //
+    // try {
+    //   const votes = await threadService.dataBase.tx(transaction => {
+    //     return transaction.batch([
+    //       threadService.addVote(body, thread, transaction),
+    //       threadService.getVotes(thread.id, transaction)
+    //     ]);
+    //   });
+    //
+    //   if (!votes[1]) {
+    //     ctx.body = null;
+    //     ctx.status = 404;
+    //
+    //     return;
+    //   }
+    //
+    //   ctx.body = Object.assign(thread, votes[1]);
+    //   ctx.status = 200;
+    // } catch (error) {
+    //   ctx.body = null;
+    //   ctx.status = 404;
+    // }
+
     let slug = ctx.params.slug_or_id;
     let slug_or_id = 'threads.id';
     if (!isNumeric(slug)) {
@@ -151,66 +247,20 @@ class ThreadController {
             ctx.status = 404;
           });
       });
-
-    // let slug = ctx.params.slug_or_id;
-    // let slug_or_id = 'threads.id';
-    // if (!isNumeric(slug)) {
-    //   slug_or_id = 'threads.slug';
-    // }
-    // let nickname = ctx.request.body.nickname;
-    // let voice = ctx.request.body.voice;
-    // let deltaVoice = 0;
-    // let threadId = 0;
-    // let thread;
-    //
-    // const oldThread = await threadService.getThreadForAdd(slug);
-    //
-    // if (!oldThread) {
-    //   ctx.body = null;
-    //   ctx.status = 404;
-    //
-    //   return;
-    // }
-    //
-    // let vote = null;
-    // try {
-    //   vote = await threadService.getVote(nickname, oldThread.id);
-    //
-    //   const delta = voice - vote.voice;
-    //
-    //   await threadService.transaction(transaction => {
-    //     const votes = threadService.updateVotes(vote.id, voice, transaction);
-    //     const threads = threadService.updateThreads(threadId, delta, transaction);
-    //
-    //     return transaction.batch([votes, threads]);
-    //   });
-    //
-    //   ctx.body = thread;
-    //   ctx.status = 200;
-    // } catch (error) {
-    //   try {
-    //     await threadService.transaction(transaction => {
-    //       const insert = threadService.createVote(nickname, voice, threadId, transaction);
-    //       const update = threadService.updateThreads(threadId, voice, transaction);
-    //
-    //       return transaction.batch([insert, update]);
-    //     });
-    //
-    //     ctx.body = oldThread;
-    //     ctx.status = 200;
-    //   } catch (error) {
-    //     ctx.body = null;
-    //     ctx.status = 404;
-    //
-    //     return;
-    //   }
-    // }
   }
 
   async getThread(ctx, next) {
+    // const slugOrId = ctx.params.slug_or_id;
+    //
+    // const result = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+    //   await threadService.findThreadBySlug(slugOrId);
+    //
+    // ctx.body = result;
+    // ctx.status = result ? 200 : 404;
+
     let slug = ctx.params.slug_or_id;
     let query = 'threads.id';
-    if (+slug) {
+    if (!isNumeric(slug)) {
       query = 'threads.slug';
     }
 
@@ -218,7 +268,9 @@ class ThreadController {
       ' threads.message, threads.id, threads.votes' +
       ' from threads inner join forums on (threads.forum = forums.id) where ' + query + ' = $1', slug)
       .then(data => {
-        ctx.body = data;
+        let d = JSON.stringify(data);
+        d = JSON.parse(d);
+        ctx.body = d;
         ctx.status = 200;
       })
       .catch(err => {
@@ -228,6 +280,47 @@ class ThreadController {
   }
 
   async getPosts(ctx, next) {
+    // const slugOrId = ctx.params.slug_or_id;
+    // const desc = ctx.query.desc ? ctx.query.desc : 'false';
+    // const limit = ctx.query.limit ? +ctx.query.limit : 100;
+    // const sort = ctx.query.sort ? ctx.query.sort : 'flat';
+    // let marker = ctx.query.marker ? +ctx.query.marker : 0;
+    //
+    // const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+    //   await threadService.findThreadBySlug(slugOrId);
+    //
+    // if (!thread) {
+    //   ctx.body = null;
+    //   ctx.status = 404;
+    //
+    //   return;
+    // }
+    //
+    // let posts = [];
+    //
+    // switch (sort) {
+    //   case 'flat':
+    //     posts = await postService.getPostsFlatSort(+thread.id, desc, limit, marker);
+    //     marker += posts.length;
+    //     break;
+    //   case 'tree':
+    //     posts = await postService.getPostsTreeSort(+thread.id, desc, limit, marker);
+    //     marker += posts.length;
+    //     break;
+    //   case 'parent_tree':
+    //     posts = await postService.getPostsParentTreeSort(+thread.id, desc, limit, marker);
+    //     marker += Math.min(limit, posts.length);
+    //     break;
+    //   default:
+    //     break;
+    // }
+    //
+    // ctx.body = {
+    //   marker: `${marker}`,
+    //   posts
+    // };
+    // ctx.status = 200;
+
     let desc = 'asc';
     if ('desc' in ctx.request.query && ctx.request.query.desc === 'true') {
       desc = 'desc';
@@ -238,7 +331,7 @@ class ThreadController {
     }
     let marker = 0;
     if ('marker' in ctx.request.query) {
-      marker = +ctx.request.query.marker;
+      marker = parseInt(ctx.request.query.marker);
     }
     let sort = 'flat';
     if ('sort' in ctx.request.query && ctx.request.query !== 'flat') {
@@ -246,7 +339,7 @@ class ThreadController {
     }
     let slug = ctx.params.slug_or_id;
     let str_query = 'threads.id';
-    if (+slug) {
+    if (!isNumeric(slug)) {
       str_query = 'threads.slug';
     }
     let query;
@@ -296,9 +389,27 @@ class ThreadController {
   }
 
   async updateThread(ctx, next) {
+    // const slugOrId = ctx.params.slug_or_id;
+    // const body = ctx.request.body;
+    //
+    // const thread = +slugOrId ? await threadService.findThreadById(+slugOrId) :
+    //   await threadService.findThreadBySlug(slugOrId);
+    //
+    // if (!thread) {
+    //   ctx.body = null;
+    //   ctx.status = 404;
+    //
+    //   return;
+    // }
+    //
+    // await threadService.updateThread(thread, body);
+    //
+    // ctx.body = Object.assign(thread, body);
+    // ctx.status = 200;
+
     let slug = ctx.params.slug_or_id;
     let query = 'threads.id';
-    if (+slug) {
+    if (!isNumeric(slug)) {
       query = 'threads.slug';
     }
 
@@ -308,12 +419,12 @@ class ThreadController {
           let q1 = t.one('select forums.slug as forum, threads.author, threads.created, threads.title,' +
             ' threads.slug, threads.message, threads.id from threads inner join forums' +
             ' on (threads.forum=forums.id) where ' + query + ' = $1', slug);
-          if (ctx.request.body.title && ctx.request.body.message) {
+          if (!isEmpty(ctx.request.body.title) && !isEmpty(ctx.request.body.message)) {
             q1 = t.none('update threads set (title, message) = (\'' + ctx.request.body.title + '\',' +
               '\'' + ctx.request.body.message + '\') where ' + query + ' = $1', slug);
-          } else if (ctx.request.body.title) {
+          } else if (!isEmpty(ctx.request.body.title)) {
             q1 = t.none('update threads set (title) = (\'' + ctx.request.body.title + '\') where ' + query + ' = $1', slug);
-          } else if (ctx.request.body.message) {
+          } else if (!isEmpty(ctx.request.body.message)) {
             q1 = t.none('update threads set (message) = (\'' + ctx.request.body.message + '\') where ' + query + ' = $1', slug);
           }
           let q2 = t.one('select forums.slug as forum, threads.author, threads.created, threads.title,' +
@@ -323,7 +434,9 @@ class ThreadController {
         });
       })
       .then(data => {
-        ctx.body = data[1];
+        let d = JSON.stringify(data[1]);
+        d = JSON.parse(d);
+        ctx.body = d;
         ctx.status = 200;
       })
       .catch(err => {
