@@ -149,6 +149,22 @@ class ThreadService extends BaseService {
       ' threads.message, threads.slug, threads.title, threads.votes from threads inner join forums' +
       ' on (threads.forum=forums.id) where ' + slug_or_id + ' = $1 ', slug)
   }
+
+  getvotes(nickname, threadId) {
+    return this.dataBase.one('select id, voice from votes where username = $1 and thread = $2', [nickname, threadId]);
+  }
+
+  updatevoices(id, voice, context = this.dataBase) {
+    return context.none('update votes set (voice) = (' + voice + ') where id = $1', id);
+  }
+
+  updatevotes(voice, id, context = this.dataBase) {
+    return context.none('update threads set (votes) = (votes + ' + voice + ') where id = $1', id);
+  }
+
+  createvote(nickname, voice, threadId, context = this.dataBase) {
+    return context.none('insert into votes (username, voice, thread) values ($1, $2, $3)', [nickname, voice, threadId]);
+  }
 }
 
 const threadService = new ThreadService();

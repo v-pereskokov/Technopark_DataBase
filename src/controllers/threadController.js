@@ -96,21 +96,21 @@ class ThreadController {
     let thread;
 
     return threadService.getthreadvote(slug_or_id, slug)
-      .catch(err => {
+      .catch(error => {
         ctx.body = null;
         ctx.status = 404;
       })
       .then(data => {
         thread = data;
         threadId = data.id;
-        return threadService.dataBase.one('select id, voice from votes where username = $1 and thread = $2', [nickname, threadId]);
+        return threadService.getvotes(nickname, threadId);
       })
       .then(data => {
         deltaVoice = voice - data.voice;
-        return threadService.dataBase.tx(t => {
-          let q1 = t.none('update votes set (voice) = (' + voice + ') where id = $1', data.id);
-          let q2 = t.none('update threads set (votes) = (votes + ' + deltaVoice + ') where id = $1', threadId);
-          return t.batch([q1, q2]);
+        return threadService.transaction(transaction => {
+          const voices = threadService.updatevoices(data.id, voice, transaction);
+          const votes = threadService.updatevotes(deltaVoice, threadId, transaction);
+          return transaction.batch([voices, votes]);
         })
           .then(data => {
             thread.votes += deltaVoice;
