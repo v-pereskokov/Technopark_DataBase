@@ -1,10 +1,9 @@
 import postService from '../services/postService';
 import threadService from '../services/threadService';
-import getObjectFromArray from '../tools/getObjectFromArray';
 import makeInsertPostsQuery from '../tools/makeInsertPostsQuery';
 
 function isNumeric(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
+  return +n;
 }
 
 class ThreadController {
@@ -29,25 +28,22 @@ class ThreadController {
     }
 
     try {
-      const thread = await threadService.dataBase.one('select threads.id, forums.slug, forums.id as \"forumId\" from threads inner join forums on threads.forum = forums.id ' +
-        ' where ' + query + ' = $1', slug);
+      const thread = await threadService.getthread(query, slug);
 
       forumSlug = thread.slug;
       threadId = thread.id;
       forumId = thread.forumId;
 
       try {
-        const tx1 = await threadService.dataBase.tx(t => {
+        const tx1 = await threadService.transaction(transaction => {
           let queries = [];
           for (let i = 0; i < posts.length; i += 1) {
             if (posts[i].parent !== 0) {
-              let q1 = t.one('select path, id from posts where id = ' + posts[i].parent + ' and thread = ' + threadId);
-              queries.push(q1);
+              queries.push(threadService.getpath(posts[i].parent, threadId, transaction));
             }
           }
-          let q2 = t.any('SELECT nextval(\'posts_id_seq\') from generate_series(1, $1)', posts.length);
-          queries.push(q2);
-          return t.batch(queries);
+          queries.push(threadService.getnextval(posts.length, transaction));
+          return transaction.batch(queries);
         });
 
         let k = 0;

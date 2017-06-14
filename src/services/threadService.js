@@ -120,6 +120,19 @@ class ThreadService extends BaseService {
 
     return this.dataBase.any(this.query)
   }
+
+  getthread(query, slug) {
+    return this.dataBase.one('select threads.id, forums.slug, forums.id as \"forumId\" from threads inner join forums on threads.forum = forums.id ' +
+      ' where ' + query + ' = $1', slug)
+  }
+
+  getpath(parent, threadId, context = this.dataBase) {
+    return context.one('select path, id from posts where id = ' + parent + ' and thread = ' + threadId);
+  }
+
+  getnextval(length, context = this.dataBase) {
+    return context.any('SELECT nextval(\'posts_id_seq\') from generate_series(1, $1)', length);
+  }
 }
 
 const threadService = new ThreadService();
