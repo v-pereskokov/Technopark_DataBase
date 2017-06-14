@@ -143,6 +143,12 @@ class ThreadService extends BaseService {
       ' threads.message, threads.id, threads.votes' +
       ' from threads inner join forums on (threads.forum = forums.id) where ' + query + ' = $1', slug)
   }
+
+  getthreadvote(slug_or_id, slug) {
+    return this.dataBase.one('select forums.slug as forum, threads.author, threads.created, threads.id,' +
+      ' threads.message, threads.slug, threads.title, threads.votes from threads inner join forums' +
+      ' on (threads.forum=forums.id) where ' + slug_or_id + ' = $1 ', slug)
+  }
 }
 
 const threadService = new ThreadService();

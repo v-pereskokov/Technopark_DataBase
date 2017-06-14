@@ -95,9 +95,7 @@ class ThreadController {
     let threadId = 0;
     let thread;
 
-    return threadService.dataBase.one('select forums.slug as forum, threads.author, threads.created, threads.id,' +
-      ' threads.message, threads.slug, threads.title, threads.votes from threads inner join forums' +
-      ' on (threads.forum=forums.id) where ' + slug_or_id + ' = $1 ', slug)
+    return threadService.getthreadvote(slug_or_id, slug)
       .catch(err => {
         ctx.body = null;
         ctx.status = 404;
@@ -108,7 +106,7 @@ class ThreadController {
         return threadService.dataBase.one('select id, voice from votes where username = $1 and thread = $2', [nickname, threadId]);
       })
       .then(data => {
-        deltaVoice = -(data.voice - voice);
+        deltaVoice = voice - data.voice;
         return threadService.dataBase.tx(t => {
           let q1 = t.none('update votes set (voice) = (' + voice + ') where id = $1', data.id);
           let q2 = t.none('update threads set (votes) = (votes + ' + deltaVoice + ') where id = $1', threadId);
