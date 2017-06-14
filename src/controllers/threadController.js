@@ -61,13 +61,11 @@ class ThreadController {
           await threadService.dataBase.tx(t => {
             const request = makeInsertPostsQuery(posts, forumId);
             let q1 = t.none(request.query, request.create);
-            let q2 = t.none('update forums set (posts) = (posts + ' + posts.length + ') where forums.slug = $1', forumSlug);
+            let q2 = threadService.updateforums(posts.length, forumSlug);
             return t.batch([q1, q2]);
           });
 
-          let d = JSON.stringify(posts);
-          d = JSON.parse(d);
-          ctx.body = d;
+          ctx.body = posts;
           ctx.status = 201;
         } catch (error) {
           ctx.body = null;
@@ -117,10 +115,8 @@ class ThreadController {
           return t.batch([q1, q2]);
         })
           .then(data => {
-            let d = JSON.stringify(thread);
-            d = JSON.parse(d);
-            d.votes += deltaVoice;
-            ctx.body = d;
+            thread.votes += deltaVoice;
+            ctx.body = thread;
             ctx.status = 200;
           });
       })
@@ -131,10 +127,8 @@ class ThreadController {
           return t.batch([q1, q2]);
         })
           .then(data => {
-            let d = JSON.stringify(thread);
-            d = JSON.parse(d);
-            d.votes += voice;
-            ctx.body = d;
+            thread.votes += voice;
+            ctx.body = thread;
             ctx.status = 200;
           })
           .catch(err => {
@@ -155,9 +149,7 @@ class ThreadController {
       ' threads.message, threads.id, threads.votes' +
       ' from threads inner join forums on (threads.forum = forums.id) where ' + query + ' = $1', slug)
       .then(data => {
-        let d = JSON.stringify(data);
-        d = JSON.parse(d);
-        ctx.body = d;
+        ctx.body = data;
         ctx.status = 200;
       })
       .catch(err => {

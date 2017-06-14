@@ -133,6 +133,10 @@ class ThreadService extends BaseService {
   getnextval(length, context = this.dataBase) {
     return context.any('SELECT nextval(\'posts_id_seq\') from generate_series(1, $1)', length);
   }
+
+  updateforums(length, forumSlug, context = this.dataBase) {
+    return context.none('update forums set (posts) = (posts + ' + length + ') where forums.slug = $1', forumSlug)
+  }
 }
 
 const threadService = new ThreadService();
