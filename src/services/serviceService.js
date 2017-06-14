@@ -17,7 +17,7 @@ class ServiceService extends BaseService {
 
   truncate(posts, threads, forums, users) {
     this.query = `TRUNCATE TABLE ${posts} CASCADE;TRUNCATE TABLE ${threads} CASCADE;
-    TRUNCATE TABLE ${forums} CASCADE;TRUNCATE TABLE ${users} CASCADE;`;
+    TRUNCATE TABLE ${forums} CASCADE;TRUNCATE TABLE ${users} CASCADE`;
 
     return this.dataBase.none(this.query);
   }

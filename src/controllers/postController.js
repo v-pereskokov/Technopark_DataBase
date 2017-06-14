@@ -3,12 +3,20 @@ import userService from '../services/userService';
 import forumService from '../services/forumService';
 import threadService from '../services/threadService';
 
+function isEmpty(obj) {
+  for (let key in obj) {
+    return false;
+  }
+  return true;
+}
+
 class PostController {
   async get(ctx, next) {
     const id = ctx.params.id;
     const related = ctx.request.query.related;
+    let response = {};
 
-    let post = await postService.getPostById(id);
+    const post = await postService.getPost(id);
 
     if (!post) {
       ctx.body = null;
@@ -17,22 +25,54 @@ class PostController {
       return;
     }
 
-    post.thread = +post.threadid;
+    response['post'] = post;
 
-    let response = {post};
+    let checker = {
+      user: -1,
+      thread: -1,
+      forum: -1
+    };
 
-    if (related) {
-      if (related.indexOf('user') !== -1) {
-        response['author'] = await userService.getUserByNickname(post.author);
+    const posts = await postService.transaction(transaction => {
+      const queries = [];
+      let index = 0;
+
+      if (related) {
+        if (related.indexOf('user') !== -1) {
+          queries.push(userService.getUserByNicknameNL(post.author, transaction));
+
+          checker.user = index;
+          ++index;
+        }
+
+        if (related.indexOf('thread') !== -1) {
+          queries.push(threadService.getThread(post.thread, transaction));
+
+          checker.thread = index;
+          ++index;
+        }
+
+        if (related.indexOf('forum') !== -1) {
+          queries.push(forumService.getBySlug(post.forum, transaction));
+
+          checker.forum = index;
+          ++index;
+        }
       }
 
-      if (related.indexOf('forum') !== -1) {
-        response['forum'] = await forumService.get(post.forum);
-      }
+      return transaction.batch(queries);
+    });
 
-      if (related.indexOf('thread') !== -1) {
-        response['thread'] = await threadService.findThreadById(+post.thread);
-      }
+    if (checker.user !== -1) {
+      response.author = posts[checker.user];
+    }
+
+    if (checker.thread !== -1) {
+      response.thread = posts[checker.thread];
+    }
+
+    if (checker.forum !== -1) {
+      response.forum = posts[checker.forum];
     }
 
     ctx.body = response;
@@ -40,26 +80,33 @@ class PostController {
   }
 
   async update(ctx, next) {
-    const message = ctx.request.body.message;
+    let id = ctx.params.id;
+    let message = ctx.request.body.message;
 
-    // union
-    const post = await postService.getPostById(ctx.params.id);
+    try {
+      const posts = await postService.getPost(id);
 
-    if (!post) {
+      if (message && message !== posts.message) {
+        try {
+          ctx.body = (await postService.transaction(transaction => {
+            const update = postService.update(id, message, transaction);
+            const select = postService.getPostOne(id, transaction);
+
+            return transaction.batch([update, select]);
+          }))[1];
+          ctx.status = 200;
+        } catch (error) {
+          ctx.body = null;
+          ctx.status = 404;
+        }
+      } else {
+        ctx.body = posts;
+        ctx.status = 200;
+      }
+    } catch (error) {
       ctx.body = null;
       ctx.status = 404;
-
-      return;
     }
-
-    post.isEdited = message && post.message !== message;
-    post.message = message || post.message;
-    post.thread = +post.threadid;
-
-    await postService.updatePost(post);
-
-    ctx.body = post;
-    ctx.status = 200;
   }
 }
 

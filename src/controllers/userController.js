@@ -2,23 +2,20 @@ import userService from '../services/userService';
 
 class UserController {
   async create(ctx, next) {
-    await next;
     const body = ctx.request.body;
-    body.nickname = ctx.params.nickname;
+    const nickname = ctx.params.nickname;
 
-    await userService.task(async (task) => {
+    const user = await userService.getUser(nickname, body.email);
 
-      // delete try
-      try {
-        await userService.create(body, task);
+    if (user.length !== 0) {
+      ctx.body = user;
+      ctx.status = 409;
 
-        ctx.body = body;
-        ctx.status = 201;
-      } catch (error) {
-        ctx.body = await userService.getUser(body.nickname, body.email, task);
-        ctx.status = 409;
-      }
-    });
+      return;
+    }
+
+    ctx.body = await userService.create(nickname, body);
+    ctx.status = 201;
   }
 
   async get(ctx, next) {

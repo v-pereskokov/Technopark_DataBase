@@ -5,9 +5,10 @@ class UserService extends BaseService {
     super();
   }
 
-  create(user, context = this.dataBase) {
-    return context.none(`INSERT INTO users (nickname, email, fullname, about) 
-    VALUES ('${user.nickname}', '${user.email}', '${user.fullname}', '${user.about}')`);
+  create(nickname, user) {
+    return this.dataBase.one(`INSERT INTO users (nickname, email, fullname, about) 
+    VALUES ('${nickname}', '${user.email}', '${user.fullname}', '${user.about}') 
+    RETURNING *`);
   }
 
   update(user, context = this.dataBase) {
@@ -20,13 +21,22 @@ class UserService extends BaseService {
   }
 
   getUser(nickname, email, context = this.dataBase) {
-    return context.many(`SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}') OR 
-    LOWER(email) = LOWER('${email}');`);
+    return context.manyOrNone(`SELECT * FROM users WHERE LOWER(nickname) = LOWER('${nickname}') OR 
+    LOWER(email) = LOWER('${email}')`);
+  }
+
+  getUserNickname(nickname, context = this.dataBase) {
+    return context.oneOrNone(`SELECT nickname FROM users WHERE UPPER(nickname) = UPPER('${nickname}')`);
   }
 
   getUserByNickname(nickname) {
-    return this.dataBase.oneOrNone(`SELECT id::int, nickname, fullname, email, about 
-     FROM users WHERE LOWER(nickname) = LOWER('${nickname}');`);
+    return this.dataBase.oneOrNone(`SELECT * 
+     FROM users WHERE LOWER(nickname) = LOWER('${nickname}')`);
+  }
+
+  getUserByNicknameNL(nickname, context = this.dataBase) {
+    return context.oneOrNone(`SELECT * 
+     FROM users WHERE nickname = '${nickname}'`);
   }
 
   getForumMembers(data) {
@@ -51,11 +61,11 @@ class UserService extends BaseService {
   checkErrors(nickname, email, context = this.dataBase) {
     return context.one(`SELECT 
       CASE WHEN (
-        SELECT id FROM users 
+        SELECT nickname FROM users 
         WHERE LOWER(nickname) <> LOWER('${nickname}') AND LOWER(email) = LOWER('${email}')
       ) IS NOT NULL THEN TRUE ELSE FALSE END AS "conflict", 
       CASE WHEN (
-        SELECT id FROM users 
+        SELECT nickname FROM users 
         WHERE LOWER(nickname) = LOWER('${nickname}')) IS NOT NULL THEN FALSE ELSE TRUE END AS "notfound"`);
   }
 }

@@ -15,6 +15,10 @@ export default class BaseService {
     return this.dataBase.task;
   }
 
+  get transaction() {
+    return this.dataBase.tx;
+  }
+
   get dataBase() {
     return this._dataBase;
   }
